@@ -1,5 +1,5 @@
 """
-Email service for ScopsTrade
+Email service for Orchard Capitals
 Professional trading firm email templates
 """
 
@@ -79,7 +79,7 @@ def _base_styles():
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         .header {
-            background-color: #0a1628;
+            background-color: #c14e2a;
             padding: 32px 40px;
         }
         .header-logo {
@@ -89,12 +89,12 @@ def _base_styles():
             letter-spacing: 0.5px;
         }
         .header-logo span {
-            color: #3b82f6;
+            color: #ffffff;
         }
         .header-divider {
             width: 40px;
             height: 2px;
-            background-color: #3b82f6;
+            background-color: #ffffff;
             margin-top: 16px;
         }
         .body-content {
@@ -146,7 +146,7 @@ def _base_styles():
         .btn {
             display: inline-block;
             padding: 12px 32px;
-            background-color: #3b82f6;
+            background-color: #c14e2a;
             color: #ffffff;
             text-decoration: none;
             border-radius: 4px;
@@ -156,7 +156,7 @@ def _base_styles():
         }
         .info-box {
             background-color: #f8fafc;
-            border-left: 3px solid #3b82f6;
+            border-left: 3px solid #c14e2a;
             padding: 16px 20px;
             margin: 24px 0;
         }
@@ -224,7 +224,7 @@ def _base_styles():
 def _header_html():
     return """
     <div class="header">
-        <div class="header-logo">SCOPS<span>TRADE</span></div>
+        <div class="header-logo">ORCHARD <span>CAPITALS</span></div>
         <div class="header-divider"></div>
     </div>
     """
@@ -235,14 +235,14 @@ def _footer_html(user_email):
     return f"""
     <div class="footer">
         <div class="footer-text">
-            This is an automated message from ScopsTrade. Please do not reply directly to this email.
+            This is an automated message from Orchard Capitals. Please do not reply directly to this email.
         </div>
         <div class="footer-links">
             <a href="{frontend}/privacy-policy">Privacy Policy</a>
             <a href="{frontend}/terms-of-service">Terms of Service</a>
         </div>
         <div class="footer-text" style="margin-top: 16px;">
-            Sent to {user_email} &middot; &copy; {timezone.now().year} ScopsTrade. All rights reserved.
+            Sent to {user_email} &middot; &copy; {timezone.now().year} Orchard Capitals. All rights reserved.
         </div>
     </div>
     """
@@ -253,7 +253,7 @@ def _footer_html(user_email):
 # ─────────────────────────────────────────────────────────────
 
 def send_welcome_email(user):
-    subject = "Welcome to ScopsTrade"
+    subject = "Welcome to Orchard Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -273,7 +273,7 @@ def send_welcome_email(user):
                 <div class="heading">Your account has been created</div>
 
                 <div class="text">
-                    Thank you for choosing ScopsTrade. Your account has been successfully registered and is ready for setup.
+                    Thank you for choosing Orchard Capitals. Your account has been successfully registered and is ready for setup.
                 </div>
 
                 <div class="info-box">
@@ -307,7 +307,7 @@ def send_welcome_email(user):
 # ─────────────────────────────────────────────────────────────
 
 def send_verification_code_email(user, code):
-    subject = "Email Verification \u2014 ScopsTrade"
+    subject = "Email Verification \u2014 Orchard Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -336,13 +336,13 @@ def send_verification_code_email(user, code):
                 </div>
 
                 <div class="notice">
-                    <p><strong>Security:</strong> Never share this code with anyone. ScopsTrade will never ask for your verification code via phone or chat.</p>
+                    <p><strong>Security:</strong> Never share this code with anyone. Orchard Capitals will never ask for your verification code via phone or chat.</p>
                 </div>
 
                 <div class="divider"></div>
 
                 <div class="text" style="font-size: 13px; color: #94a3b8;">
-                    If you did not create a ScopsTrade account, you can safely ignore this email.
+                    If you did not create a Orchard Capitals account, you can safely ignore this email.
                 </div>
             </div>
 
@@ -360,7 +360,7 @@ def send_verification_code_email(user, code):
 # ─────────────────────────────────────────────────────────────
 
 def send_2fa_code_email(user, code):
-    subject = "Login Verification \u2014 ScopsTrade"
+    subject = "Login Verification \u2014 Orchard Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -440,8 +440,8 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
         <style>
             {_base_styles()}
             .amount-display {{
-                background-color: #eff6ff;
-                border: 1px solid #bfdbfe;
+                background-color: #fff4ee;
+                border: 1px solid #fbd0b8;
                 border-radius: 6px;
                 padding: 24px;
                 text-align: center;
@@ -450,7 +450,7 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
             .amount-display .amount {{
                 font-size: 32px;
                 font-weight: 700;
-                color: #2563eb;
+                color: #c14e2a;
             }}
             .amount-display .label {{
                 font-size: 12px;
@@ -462,8 +462,8 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
             .status-badge {{
                 display: inline-block;
                 padding: 4px 12px;
-                background-color: #eff6ff;
-                color: #1e40af;
+                background-color: #fff4ee;
+                color: #a8401f;
                 border-radius: 2px;
                 font-size: 11px;
                 font-weight: 600;
@@ -546,7 +546,7 @@ def send_admin_deposit_notification(user, transaction):
         receipt_row = f"""
         <tr>
             <td class="label">Receipt</td>
-            <td class="value"><a href="{transaction.receipt.url}" target="_blank" style="color: #3b82f6; text-decoration: none;">View Receipt</a></td>
+            <td class="value"><a href="{transaction.receipt.url}" target="_blank" style="color: #c14e2a; text-decoration: none;">View Receipt</a></td>
         </tr>
         """
 
@@ -784,7 +784,7 @@ def send_admin_withdrawal_notification(user, transaction, payment_method=None):
 def send_password_reset_email(user, token, uid):
     reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
-    subject = "Password Reset \u2014 ScopsTrade"
+    subject = "Password Reset \u2014 Orchard Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -817,7 +817,7 @@ def send_password_reset_email(user, token, uid):
                 <div class="heading">Reset your password</div>
 
                 <div class="text">
-                    We received a request to reset the password associated with your ScopsTrade account. Click the button below to set a new password.
+                    We received a request to reset the password associated with your Orchard Capitals account. Click the button below to set a new password.
                 </div>
 
                 <div style="text-align: center; margin: 32px 0;">
