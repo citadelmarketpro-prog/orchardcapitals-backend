@@ -1,0 +1,71 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Pro Traders - Orchard Capitals Admin{% endblock %}
+{% block page_title %}Professional Traders{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl border border-gray-200/60 p-4 mb-6">
+    <form method="get" class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input type="text" name="search" value="{{ search }}" placeholder="Search by name, username, country…"
+                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+        <select name="badge" class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+            <option value="">All Badges</option>
+            <option value="gold" {% if badge_filter == 'gold' %}selected{% endif %}>Gold</option>
+            <option value="silver" {% if badge_filter == 'silver' %}selected{% endif %}>Silver</option>
+            <option value="bronze" {% if badge_filter == 'bronze' %}selected{% endif %}>Bronze</option>
+        </select>
+        <select name="active" class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+            <option value="">All Status</option>
+            <option value="active" {% if active_filter == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if active_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-500 transition">Filter</button>
+        <a href="{% url 'dashboard:add_trader' %}" class="px-5 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 transition text-center">+ Add Trader</a>
+    </form>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[900px]">
+            <thead><tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase">
+                <th class="px-5 py-3">Trader</th><th class="px-5 py-3">Badge</th><th class="px-5 py-3">Gain %</th><th class="px-5 py-3">Win Rate</th><th class="px-5 py-3">Copiers</th><th class="px-5 py-3">Trades</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Actions</th>
+            </tr></thead>
+            <tbody class="divide-y divide-gray-100">
+            {% for t in traders %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-5 py-3">
+                    <div class="flex items-center gap-3">
+                        {% if t.avatar %}<img src="{{ t.avatar.url }}" class="w-9 h-9 rounded-full object-cover">{% else %}<div class="w-9 h-9 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-sm font-bold">{{ t.name|first }}</div>{% endif %}
+                        <div>
+                            <p class="font-medium text-gray-800">{{ t.name }}</p>
+                            <p class="text-xs text-gray-400">{{ t.username }} &middot; {{ t.country }}</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-5 py-3">
+                    <span class="px-2 py-0.5 rounded-full text-xs font-medium capitalize {% if t.badge == 'gold' %}bg-yellow-50 text-yellow-700{% elif t.badge == 'silver' %}bg-gray-100 text-gray-600{% else %}bg-orange-50 text-orange-700{% endif %}">{{ t.badge }}</span>
+                </td>
+                <td class="px-5 py-3 font-semibold text-emerald-600">{{ t.gain|floatformat:0 }}%</td>
+                <td class="px-5 py-3">{{ t.win_rate|floatformat:1 }}%</td>
+                <td class="px-5 py-3">{{ t.copiers }}</td>
+                <td class="px-5 py-3">{{ t.trades }}</td>
+                <td class="px-5 py-3">
+                    {% if t.is_active %}<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span><span class="text-xs text-emerald-600 ml-1">Active</span>
+                    {% else %}<span class="w-2 h-2 rounded-full bg-gray-300 inline-block"></span><span class="text-xs text-gray-400 ml-1">Inactive</span>{% endif %}
+                </td>
+                <td class="px-5 py-3 flex gap-1">
+                    <a href="{% url 'dashboard:trader_detail' t.id %}" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium hover:bg-indigo-100 transition">View</a>
+                    <a href="{% url 'dashboard:edit_trader' t.id %}" class="px-2.5 py-1 bg-gray-50 text-gray-600 rounded text-xs font-medium hover:bg-gray-100 transition">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">No traders found</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}
