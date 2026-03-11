@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "scoptrade/wsgi.py",
+      "src": "orchard/wsgi.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
@@ -14,11 +14,11 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "scoptrade/wsgi.py"
+      "dest": "orchard/wsgi.py"
     }
   ],
   "env": {
-    "DJANGO_SETTINGS_MODULE": "scoptrade.settings",
+    "DJANGO_SETTINGS_MODULE": "orchard.settings",
     "PYTHONUNBUFFERED": "1"
   }
 }
