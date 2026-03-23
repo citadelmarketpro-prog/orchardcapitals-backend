@@ -329,20 +329,8 @@ def login_with_2fa(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # CHECK: If email not verified, set cookie but flag it
-    if not user.email_verified:
-        response = Response(
-            {
-                "error": "Please verify your email before logging in",
-                "email_verified": False,
-                "requires_verification": True,
-            },
-            status=status.HTTP_403_FORBIDDEN,
-        )
-        set_auth_cookies(response, user)
-        return response
-
-    # Check if 2FA is enabled for this user
+    # Check if 2FA is enabled for this user — handle before email verification
+    # so that 2FA users can authenticate even if email_verified is False
     if user.two_factor_enabled:
         # Generate and send 2FA code
         verification_code = generate_verification_code()
@@ -370,6 +358,19 @@ def login_with_2fa(request):
             },
             status=status.HTTP_200_OK,
         )
+
+    # No 2FA — check email verification before granting full access
+    if not user.email_verified:
+        response = Response(
+            {
+                "error": "Please verify your email before logging in",
+                "email_verified": False,
+                "requires_verification": True,
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+        set_auth_cookies(response, user)
+        return response
 
     # No 2FA required - return JWT tokens via cookies
     main_user = User.objects.get(email=user.email)
@@ -460,6 +461,7 @@ def verify_2fa_login(request):
                 "account_id": user.account_id,
                 "email_verified": user.email_verified,
                 "two_factor_enabled": user.two_factor_enabled,
+                "has_submitted_kyc": user.has_submitted_kyc,
             },
         },
         status=status.HTTP_200_OK,
@@ -469,12 +471,25 @@ def verify_2fa_login(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def resend_2fa_code(request):
     """
-    Resend 2FA code for login
+    Resend 2FA code for login (called before authentication is complete)
     """
-    user = request.user
+    email = request.data.get("email", "").strip()
+    if not email:
+        return Response(
+            {"error": "Email is required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response(
+            {"error": "User not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
     # Check if 2FA is enabled
     if not user.two_factor_enabled:
