@@ -9,7 +9,7 @@ _input = 'w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-s
 _select = _input
 _textarea = _input
 _checkbox = 'w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500'
-_file = 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100'
+_file = 'w-full cursor-pointer text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer'
 
 
 # ===== Trade Forms =====
