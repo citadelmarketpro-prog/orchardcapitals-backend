@@ -1,0 +1,90 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Send Notification - Orchard Capitals Admin{% endblock %}
+{% block page_title %}Send Notification{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+{% if form.errors %}
+<div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
+    <h4 class="font-semibold text-red-800 mb-2">Please correct the following errors:</h4>
+    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+        {% for field in form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-gray-200/60 p-6">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.target.label }}</label>
+                {{ form.target }}
+                {% if form.target.errors %}<p class="text-xs text-red-600 mt-1">{{ form.target.errors.0 }}</p>{% endif %}
+            </div>
+            <div id="user-field">
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.user.label }}</label>
+                {{ form.user }}
+                {% if form.user.errors %}<p class="text-xs text-red-600 mt-1">{{ form.user.errors.0 }}</p>{% endif %}
+                <p class="text-xs text-gray-400 mt-1">{{ form.user.help_text }}</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.type.label }}</label>
+            {{ form.type }}
+            {% if form.type.errors %}<p class="text-xs text-red-600 mt-1">{{ form.type.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}<p class="text-xs text-red-600 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.message.label }}</label>
+            {{ form.message }}
+            {% if form.message.errors %}<p class="text-xs text-red-600 mt-1">{{ form.message.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.full_details.label }}</label>
+            {{ form.full_details }}
+            {% if form.full_details.errors %}<p class="text-xs text-red-600 mt-1">{{ form.full_details.errors.0 }}</p>{% endif %}
+        </div>
+
+        <!-- Broadcast warning -->
+        <div id="broadcast-warning" class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5 text-sm text-amber-800">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            This will send the notification to <strong>all active users</strong>.
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition">
+                <i class="fas fa-paper-plane mr-2"></i>Send Notification
+            </button>
+            <a href="{% url 'dashboard:notifications_list' %}" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+
+<script>
+const targetSelect = document.getElementById('id_target');
+const userField = document.getElementById('user-field');
+const broadcastWarning = document.getElementById('broadcast-warning');
+
+function toggleFields() {
+    const isAll = targetSelect.value === 'all';
+    userField.style.display = isAll ? 'none' : '';
+    broadcastWarning.classList.toggle('hidden', !isAll);
+}
+
+targetSelect.addEventListener('change', toggleFields);
+toggleFields();
+</script>
+{% endblock %}

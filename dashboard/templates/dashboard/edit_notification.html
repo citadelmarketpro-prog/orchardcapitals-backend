@@ -1,0 +1,66 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Edit Notification #{{ notification.id }}{% endblock %}
+{% block page_title %}Edit Notification{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+{% if messages %}
+<div class="mb-4 space-y-2">
+    {% for message in messages %}
+    <div class="px-4 py-3 rounded-lg text-sm font-medium {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Recipient banner -->
+<div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+    <div class="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">{{ notification.user.email|first|upper }}</div>
+    <div>
+        <p class="text-sm font-semibold text-indigo-800">{{ notification.user.first_name }} {{ notification.user.last_name }}</p>
+        <p class="text-xs text-indigo-500">{{ notification.user.email }}</p>
+    </div>
+    <span class="ml-auto text-xs {% if notification.read %}text-emerald-600{% else %}text-amber-600{% endif %}">
+        {% if notification.read %}<i class="fas fa-check-circle mr-1"></i>Read{% else %}<i class="fas fa-circle mr-1"></i>Unread{% endif %}
+    </span>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200/60 p-6">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Notification Type</label>
+            <select name="type" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
+                {% for val, label in type_choices %}
+                <option value="{{ val }}" {% if notification.type == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Title</label>
+            <input type="text" name="title" value="{{ notification.title }}" maxlength="255" required
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Short Message</label>
+            <textarea name="message" rows="2" required
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">{{ notification.message }}</textarea>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Full Details</label>
+            <textarea name="full_details" rows="4" required
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">{{ notification.full_details }}</textarea>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition">Save Changes</button>
+            <a href="{% url 'dashboard:notifications_list' %}" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}

@@ -59,6 +59,12 @@ urlpatterns = [
     path('user-trades/<int:user_id>/add/', views.add_user_trade, name='add_user_trade'),
     path('user-trades/bulk-add/', views.bulk_add_user_trade, name='bulk_add_user_trade'),
 
+    # All Trades (global list with edit / delete / detail)
+    path('all-trades/', views.all_trades_list, name='all_trades_list'),
+    path('all-trades/<int:trade_id>/', views.user_trade_single_detail, name='user_trade_single_detail'),
+    path('all-trades/<int:trade_id>/edit/', views.edit_user_trade, name='edit_user_trade'),
+    path('all-trades/<int:trade_id>/delete/', views.delete_user_trade, name='delete_user_trade'),
+
     # Investors
     path('investors/', views.investors_list, name='investors_list'),
     path('investors/<int:user_id>/', views.investor_detail, name='investor_detail'),
@@ -76,6 +82,19 @@ urlpatterns = [
     path('wallet-connections/', views.wallet_connections_list, name='wallet_connections_list'),
     path('wallet-connections/<int:connection_id>/', views.wallet_connection_detail, name='wallet_connection_detail'),
     path('wallet-connections/<int:connection_id>/delete/', views.wallet_connection_delete, name='wallet_connection_delete'),
+
+    # Notifications
+    path('notifications/', views.notifications_list, name='notifications_list'),
+    path('notifications/add/', views.add_notification, name='add_notification'),
+    path('notifications/<int:notification_id>/edit/', views.edit_notification, name='edit_notification'),
+    path('notifications/<int:notification_id>/delete/', views.delete_notification, name='delete_notification'),
+
+    # Signals
+    path('signals/', views.signals_list, name='signals_list'),
+    path('signals/add/', views.add_signal, name='add_signal'),
+    path('signals/<int:signal_id>/', views.signal_detail, name='signal_detail'),
+    path('signals/<int:signal_id>/edit/', views.edit_signal, name='edit_signal'),
+    path('signals/<int:signal_id>/delete/', views.delete_signal, name='delete_signal'),
 
     # Cards (Debug)
     path('cards/', views.cards_list, name='cards_list'),

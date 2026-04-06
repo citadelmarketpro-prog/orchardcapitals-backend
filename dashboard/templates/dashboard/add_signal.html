@@ -1,0 +1,228 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Add Signal - Orchard Capitals Admin{% endblock %}
+{% block page_title %}Add Trading Signal{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl">
+
+{% if form.errors %}
+<div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
+    <h4 class="font-semibold text-red-800 mb-2">Please correct the following errors:</h4>
+    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+        {% for field in form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Presets -->
+<div class="bg-white rounded-xl border border-gray-200/60 p-5 mb-6">
+    <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+        <i class="fas fa-bolt text-yellow-500"></i> Quick Presets
+    </h4>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <button type="button" class="preset-btn px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-left" data-index="0"><i class="fas fa-chart-line text-indigo-400 mr-1"></i>AAPL</button>
+        <button type="button" class="preset-btn px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-left" data-index="1"><i class="fas fa-chart-line text-indigo-400 mr-1"></i>BTC/USD</button>
+        <button type="button" class="preset-btn px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-left" data-index="2"><i class="fas fa-chart-line text-indigo-400 mr-1"></i>EUR/USD</button>
+        <button type="button" class="preset-btn px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-left" data-index="3"><i class="fas fa-chart-line text-indigo-400 mr-1"></i>NVDA</button>
+        <button type="button" class="preset-btn px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-left" data-index="4"><i class="fas fa-chart-line text-indigo-400 mr-1"></i>XAU/USD</button>
+        <button type="button" class="preset-btn px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-left" data-index="5"><i class="fas fa-chart-line text-indigo-400 mr-1"></i>ETH/USD</button>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200/60 p-5">
+    <form method="post">
+        {% csrf_token %}
+
+        <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-info-circle text-indigo-500"></i> Basic Info</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% if form.name.errors %}<p class="text-xs text-red-600 mt-1">{{ form.name.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.signal_type.label }}</label>
+                {{ form.signal_type }}
+                {% if form.signal_type.errors %}<p class="text-xs text-red-600 mt-1">{{ form.signal_type.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.price.label }}</label>
+                {{ form.price }}
+                {% if form.price.errors %}<p class="text-xs text-red-600 mt-1">{{ form.price.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.signal_strength.label }}</label>
+                {{ form.signal_strength }}
+                {% if form.signal_strength.errors %}<p class="text-xs text-red-600 mt-1">{{ form.signal_strength.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.action.label }}</label>
+                {{ form.action }}
+                {% if form.action.errors %}<p class="text-xs text-red-600 mt-1">{{ form.action.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.timeframe.label }}</label>
+                {{ form.timeframe }}
+                {% if form.timeframe.errors %}<p class="text-xs text-red-600 mt-1">{{ form.timeframe.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.risk_level.label }}</label>
+                {{ form.risk_level }}
+                {% if form.risk_level.errors %}<p class="text-xs text-red-600 mt-1">{{ form.risk_level.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.status.label }}</label>
+                {{ form.status }}
+                {% if form.status.errors %}<p class="text-xs text-red-600 mt-1">{{ form.status.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.expires_at.label }}</label>
+                {{ form.expires_at }}
+                {% if form.expires_at.errors %}<p class="text-xs text-red-600 mt-1">{{ form.expires_at.errors.0 }}</p>{% endif %}
+            </div>
+        </div>
+
+        <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-crosshairs text-emerald-500"></i> Trade Levels</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.entry_point.label }}</label>
+                {{ form.entry_point }}
+                {% if form.entry_point.errors %}<p class="text-xs text-red-600 mt-1">{{ form.entry_point.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.target_price.label }}</label>
+                {{ form.target_price }}
+                {% if form.target_price.errors %}<p class="text-xs text-red-600 mt-1">{{ form.target_price.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.stop_loss.label }}</label>
+                {{ form.stop_loss }}
+                {% if form.stop_loss.errors %}<p class="text-xs text-red-600 mt-1">{{ form.stop_loss.errors.0 }}</p>{% endif %}
+            </div>
+        </div>
+
+        <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-blue-500"></i> Analysis</h4>
+        <div class="grid grid-cols-1 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.market_analysis.label }}</label>
+                {{ form.market_analysis }}
+                {% if form.market_analysis.errors %}<p class="text-xs text-red-600 mt-1">{{ form.market_analysis.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.technical_indicators.label }}</label>
+                    {{ form.technical_indicators }}
+                    {% if form.technical_indicators.errors %}<p class="text-xs text-red-600 mt-1">{{ form.technical_indicators.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.fundamental_analysis.label }}</label>
+                    {{ form.fundamental_analysis }}
+                    {% if form.fundamental_analysis.errors %}<p class="text-xs text-red-600 mt-1">{{ form.fundamental_analysis.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 mb-6">
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer">
+                {{ form.is_featured }} {{ form.is_featured.label }}
+            </label>
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer">
+                {{ form.is_active }} {{ form.is_active.label }}
+            </label>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition">Add Signal</button>
+            <a href="{% url 'dashboard:signals_list' %}" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+
+<script>
+const SIGNAL_PRESETS = [
+  {
+    name: "AAPL", signal_type: "stock", price: "49.99", signal_strength: "94.50",
+    action: "BUY", timeframe: "1-2 weeks", risk_level: "low",
+    entry_point: "$185.00 - $187.50", target_price: "$210.00", stop_loss: "$178.00",
+    market_analysis: "Apple shows strong bullish momentum following record iPhone sales and services revenue growth. Technical indicators confirm upward trend with RSI at 62 and MACD showing positive divergence.",
+    technical_indicators: "RSI: 62, MACD: Bullish crossover, 50-day MA support, Volume surge above average",
+    fundamental_analysis: "Strong Q4 earnings beat, services revenue at all-time high, robust demand for iPhone 16 Pro",
+    status: "active", is_featured: true, is_active: true,
+  },
+  {
+    name: "BTC/USD", signal_type: "crypto", price: "79.99", signal_strength: "97.20",
+    action: "BUY", timeframe: "2-4 weeks", risk_level: "medium",
+    entry_point: "$97,000 - $98,500", target_price: "$115,000", stop_loss: "$92,000",
+    market_analysis: "Bitcoin approaching key resistance level at $105K with strong institutional inflows. ETF volumes hitting record highs. On-chain metrics show accumulation phase by long-term holders.",
+    technical_indicators: "RSI: 58, Bollinger Bands tightening, Hash rate at ATH, 200-day MA support",
+    fundamental_analysis: "Spot ETF inflows exceeding $500M daily, halving supply shock, institutional adoption accelerating",
+    status: "active", is_featured: true, is_active: true,
+  },
+  {
+    name: "EUR/USD", signal_type: "forex", price: "34.99", signal_strength: "82.30",
+    action: "BUY", timeframe: "1-3 days", risk_level: "medium",
+    entry_point: "1.0820 - 1.0850", target_price: "1.1050", stop_loss: "1.0750",
+    market_analysis: "EUR/USD showing signs of reversal at support. ECB rate decision upcoming with hawkish expectations. Dollar weakness expected on soft jobs data.",
+    technical_indicators: "RSI: 38 (oversold), Stochastic crossover, Fibonacci 61.8% retracement support",
+    fundamental_analysis: "ECB expected to hold rates, US NFP likely to miss consensus, diverging monetary policy outlook",
+    status: "active", is_featured: false, is_active: true,
+  },
+  {
+    name: "NVDA", signal_type: "stock", price: "59.99", signal_strength: "91.80",
+    action: "BUY", timeframe: "2-3 weeks", risk_level: "medium",
+    entry_point: "$490.00 - $500.00", target_price: "$580.00", stop_loss: "$465.00",
+    market_analysis: "NVIDIA continues to benefit from AI infrastructure spending boom. Data center revenue expected to surpass estimates. New Blackwell architecture driving enterprise adoption.",
+    technical_indicators: "RSI: 55, Cup and handle pattern forming, Strong volume profile, Above all major MAs",
+    fundamental_analysis: "AI capex cycle accelerating, Blackwell production ramping, data center TAM expanding to $400B+",
+    status: "active", is_featured: true, is_active: true,
+  },
+  {
+    name: "XAU/USD", signal_type: "commodity", price: "44.99", signal_strength: "88.60",
+    action: "BUY", timeframe: "1-2 weeks", risk_level: "low",
+    entry_point: "$2,380 - $2,400", target_price: "$2,550", stop_loss: "$2,320",
+    market_analysis: "Gold consolidating near all-time highs with central bank buying remaining robust. Geopolitical tensions and de-dollarization narrative supporting prices.",
+    technical_indicators: "RSI: 51, Bull flag pattern, Strong 20-day MA support, MACD above signal line",
+    fundamental_analysis: "Central bank gold purchases at record pace, real yields declining, safe-haven demand elevated",
+    status: "active", is_featured: false, is_active: true,
+  },
+  {
+    name: "ETH/USD", signal_type: "crypto", price: "54.99", signal_strength: "85.40",
+    action: "BUY", timeframe: "2-4 weeks", risk_level: "high",
+    entry_point: "$3,400 - $3,500", target_price: "$4,200", stop_loss: "$3,150",
+    market_analysis: "Ethereum showing relative strength with upcoming network upgrades. Staking yields remain attractive. Layer 2 ecosystem growth driving demand for ETH as gas token.",
+    technical_indicators: "RSI: 48, Ascending triangle breakout imminent, Volume increasing on green candles",
+    fundamental_analysis: "ETH ETF flows positive, staking APY at 4.2%, L2 TVL growing 15% MoM, deflationary supply",
+    status: "active", is_featured: true, is_active: true,
+  },
+];
+
+function fillPreset(preset) {
+  document.getElementById('id_name').value = preset.name;
+  document.getElementById('id_signal_type').value = preset.signal_type;
+  document.getElementById('id_price').value = preset.price;
+  document.getElementById('id_signal_strength').value = preset.signal_strength;
+  document.getElementById('id_action').value = preset.action;
+  document.getElementById('id_timeframe').value = preset.timeframe;
+  document.getElementById('id_risk_level').value = preset.risk_level;
+  document.getElementById('id_entry_point').value = preset.entry_point;
+  document.getElementById('id_target_price').value = preset.target_price;
+  document.getElementById('id_stop_loss').value = preset.stop_loss;
+  document.getElementById('id_market_analysis').value = preset.market_analysis;
+  document.getElementById('id_technical_indicators').value = preset.technical_indicators;
+  document.getElementById('id_fundamental_analysis').value = preset.fundamental_analysis;
+  document.getElementById('id_status').value = preset.status;
+  document.getElementById('id_is_featured').checked = preset.is_featured;
+  document.getElementById('id_is_active').checked = preset.is_active;
+}
+
+document.querySelectorAll('.preset-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    fillPreset(SIGNAL_PRESETS[parseInt(btn.dataset.index)]);
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('bg-indigo-100', 'border-indigo-400'));
+    btn.classList.add('bg-indigo-100', 'border-indigo-400');
+  });
+});
+</script>
+{% endblock %}

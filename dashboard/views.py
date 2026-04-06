@@ -12,13 +12,13 @@ from app.models import (
     CustomUser, Transaction, Stock, AdminWallet,
     Portfolio, Notification, UserStockPosition,
     Trader, UserCopyTraderHistory, UserTraderCopy,
-    WalletConnection, Card,
+    WalletConnection, Card, Signal, UserSignalPurchase,
 )
 from .forms import (
     AddTradeForm, AddEarningsForm, ApproveDepositForm,
     ApproveWithdrawalForm, ApproveKYCForm, AddCopyTradeForm,
     EditCopyTradeForm, AddTraderForm, EditTraderForm, EditDepositForm,
-    AdminWalletForm, CardEditForm, AddUserDirectTradeForm,
+    AdminWalletForm, CardEditForm, AddUserDirectTradeForm, SignalForm, NotificationForm,
 )
 from .decorators import admin_required
 
@@ -860,7 +860,7 @@ def edit_trader(request, trader_id):
     trader = get_object_or_404(Trader, id=trader_id)
 
     if request.method == 'POST':
-        form = EditTraderForm(request.POST, request.FILES)
+        form = EditTraderForm(request.POST, request.FILES, trader_id=trader.id)
         if form.is_valid():
             data = _build_trader_data(form)
             for key, val in data.items():
@@ -874,7 +874,7 @@ def edit_trader(request, trader_id):
             messages.success(request, f'Trader "{trader.name}" updated successfully!')
             return redirect('dashboard:trader_detail', trader_id=trader.id)
     else:
-        form = EditTraderForm(initial={
+        form = EditTraderForm(trader_id=trader.id, initial={
             # Basic Info
             'name': trader.name,
             'username': trader.username,
@@ -1084,7 +1084,7 @@ def user_experts(request):
 def users_trade_list(request):
     """List all users for user-direct trade management, with bulk-select support."""
     search = request.GET.get('q', '').strip()
-    users = CustomUser.objects.filter(is_active=True).order_by('email')
+    users = CustomUser.objects.filter(is_active=True, balance__gt=0).order_by('email')
     if search:
         users = users.filter(
             Q(email__icontains=search) |
@@ -1122,14 +1122,14 @@ def add_user_trade(request, user_id):
         if form.is_valid():
             cd = form.cleaned_data
             reference = f"UD-{viewed_user.id}-{uuid.uuid4().hex[:8].upper()}"
-            trade = UserCopyTraderHistory.objects.create(
+            UserCopyTraderHistory.objects.create(
                 user=viewed_user,
                 trader=None,
                 market=cd['market'],
                 direction=cd['direction'],
                 duration=cd['duration'],
-                amount=cd['amount'],
-                investment_amount=cd['investment_amount'],
+                amount=Decimal('0'),
+                investment_amount=None,
                 entry_price=cd['entry_price'],
                 exit_price=cd.get('exit_price'),
                 profit_loss_percent=cd['profit_loss_percent'],
@@ -1139,10 +1139,9 @@ def add_user_trade(request, user_id):
                 reference=reference,
             )
             if cd['status'] == 'closed':
-                profit = trade.calculate_user_profit_loss()
-                if profit:
-                    viewed_user.profit = (viewed_user.profit or Decimal('0.00')) + profit
-                    viewed_user.save(update_fields=['profit'])
+                profit = (viewed_user.balance * cd['profit_loss_percent']) / Decimal('100')
+                viewed_user.profit = (viewed_user.profit or Decimal('0.00')) + profit
+                viewed_user.save(update_fields=['profit'])
             messages.success(request, f'Trade added successfully for {viewed_user.email}')
             return redirect('dashboard:user_trade_detail', user_id=viewed_user.id)
     else:
@@ -1186,14 +1185,14 @@ def bulk_add_user_trade(request):
                 created_count = 0
                 for u in selected_users:
                     reference = f"UD-{u.id}-{uuid.uuid4().hex[:8].upper()}"
-                    trade = UserCopyTraderHistory.objects.create(
+                    UserCopyTraderHistory.objects.create(
                         user=u,
                         trader=None,
                         market=cd['market'],
                         direction=cd['direction'],
                         duration=cd['duration'],
-                        amount=cd['amount'],
-                        investment_amount=cd['investment_amount'],
+                        amount=Decimal('0'),
+                        investment_amount=None,
                         entry_price=cd['entry_price'],
                         exit_price=cd.get('exit_price'),
                         profit_loss_percent=cd['profit_loss_percent'],
@@ -1203,10 +1202,9 @@ def bulk_add_user_trade(request):
                         reference=reference,
                     )
                     if cd['status'] == 'closed':
-                        profit = trade.calculate_user_profit_loss()
-                        if profit:
-                            u.profit = (u.profit or Decimal('0.00')) + profit
-                            u.save(update_fields=['profit'])
+                        profit = (u.balance * cd['profit_loss_percent']) / Decimal('100')
+                        u.profit = (u.profit or Decimal('0.00')) + profit
+                        u.save(update_fields=['profit'])
                     created_count += 1
                 messages.success(request, f'Trade added for {created_count} user(s) successfully.')
                 return redirect('dashboard:users_trade_list')
@@ -1219,6 +1217,128 @@ def bulk_add_user_trade(request):
                 })
 
     return redirect('dashboard:users_trade_list')
+
+
+# ---------------------------------------------------------------------------
+# All User Trades (global list with edit / delete / detail)
+# ---------------------------------------------------------------------------
+
+@admin_required
+def all_trades_list(request):
+    """List every user-direct trade across all users with search and pagination."""
+    search = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '')
+
+    qs = UserCopyTraderHistory.objects.filter(trader__isnull=True).select_related('user').order_by('-opened_at')
+    if search:
+        qs = qs.filter(
+            Q(user__email__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(market__icontains=search) |
+            Q(reference__icontains=search)
+        )
+    if status_filter in ('open', 'closed'):
+        qs = qs.filter(status=status_filter)
+
+    page_obj, paginator = _paginate(qs, request, 25)
+    return render(request, 'dashboard/all_trades_list.html', {
+        'trades': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'is_paginated': paginator.num_pages > 1,
+        'search': search,
+        'status_filter': status_filter,
+        'total_count': qs.count(),
+        'open_count': qs.filter(status='open').count(),
+        'closed_count': qs.filter(status='closed').count(),
+    })
+
+
+@admin_required
+def user_trade_single_detail(request, trade_id):
+    """Detail view for a single user-direct trade."""
+    trade = get_object_or_404(UserCopyTraderHistory, id=trade_id, trader__isnull=True)
+    user = trade.user
+    profit_loss_amount = (user.balance * trade.profit_loss_percent) / Decimal('100') if user else Decimal('0')
+    return render(request, 'dashboard/user_trade_single_detail.html', {
+        'trade': trade,
+        'profit_loss_amount': profit_loss_amount,
+    })
+
+
+@admin_required
+def edit_user_trade(request, trade_id):
+    """Edit a single user-direct trade."""
+    trade = get_object_or_404(UserCopyTraderHistory, id=trade_id, trader__isnull=True)
+    user = trade.user
+
+    if request.method == 'POST':
+        form = AddUserDirectTradeForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            old_status = trade.status
+            old_pl = trade.profit_loss_percent
+
+            trade.market = cd['market']
+            trade.direction = cd['direction']
+            trade.duration = cd['duration']
+            trade.entry_price = cd['entry_price']
+            trade.exit_price = cd.get('exit_price')
+            trade.profit_loss_percent = cd['profit_loss_percent']
+            trade.status = cd['status']
+            trade.closed_at = cd.get('closed_at')
+            trade.notes = cd.get('notes', '')
+            trade.save()
+
+            # Adjust user profit: reverse old, apply new (only for closed trades)
+            if user:
+                if old_status == 'closed':
+                    old_profit = (user.balance * old_pl) / Decimal('100')
+                    user.profit = (user.profit or Decimal('0')) - old_profit
+                if cd['status'] == 'closed':
+                    new_profit = (user.balance * cd['profit_loss_percent']) / Decimal('100')
+                    user.profit = (user.profit or Decimal('0')) + new_profit
+                if old_status == 'closed' or cd['status'] == 'closed':
+                    user.save(update_fields=['profit'])
+
+            messages.success(request, f'Trade #{trade.id} updated successfully.')
+            return redirect('dashboard:all_trades_list')
+    else:
+        form = AddUserDirectTradeForm(initial={
+            'market': trade.market,
+            'direction': trade.direction,
+            'duration': trade.duration,
+            'entry_price': trade.entry_price,
+            'exit_price': trade.exit_price,
+            'profit_loss_percent': trade.profit_loss_percent,
+            'status': trade.status,
+            'closed_at': trade.closed_at,
+            'notes': trade.notes,
+        })
+
+    return render(request, 'dashboard/edit_user_trade.html', {
+        'form': form,
+        'trade': trade,
+    })
+
+
+@admin_required
+def delete_user_trade(request, trade_id):
+    """Delete a single user-direct trade."""
+    trade = get_object_or_404(UserCopyTraderHistory, id=trade_id, trader__isnull=True)
+    user = trade.user
+
+    if request.method == 'POST':
+        if user and trade.status == 'closed':
+            profit = (user.balance * trade.profit_loss_percent) / Decimal('100')
+            user.profit = (user.profit or Decimal('0')) - profit
+            user.save(update_fields=['profit'])
+        trade.delete()
+        messages.success(request, f'Trade deleted successfully.')
+        return redirect('dashboard:all_trades_list')
+
+    return render(request, 'dashboard/delete_user_trade.html', {'trade': trade})
 
 
 # ---------------------------------------------------------------------------
@@ -1517,3 +1637,215 @@ def card_delete(request, card_id):
         messages.success(request, f'Card #{card_id} deleted.')
         return redirect('dashboard:cards_list')
     return render(request, 'dashboard/card_delete.html', {'card': card})
+
+
+# ---------------------------------------------------------------------------
+# Signals
+# ---------------------------------------------------------------------------
+
+@admin_required
+def signals_list(request):
+    search = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '')
+    qs = Signal.objects.all().order_by('-created_at')
+    if search:
+        qs = qs.filter(Q(name__icontains=search))
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+    page_obj, paginator = _paginate(qs, request, 20)
+    return render(request, 'dashboard/signals_list.html', {
+        'signals': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'is_paginated': paginator.num_pages > 1,
+        'search': search,
+        'status_filter': status_filter,
+        'total_count': Signal.objects.count(),
+        'active_count': Signal.objects.filter(is_active=True).count(),
+        'purchases_count': UserSignalPurchase.objects.count(),
+    })
+
+
+@admin_required
+def add_signal(request):
+    if request.method == 'POST':
+        form = SignalForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            Signal.objects.create(
+                name=cd['name'],
+                signal_type=cd['signal_type'],
+                price=cd['price'],
+                signal_strength=cd['signal_strength'],
+                action=cd['action'],
+                timeframe=cd['timeframe'],
+                risk_level=cd['risk_level'],
+                entry_point=cd['entry_point'],
+                target_price=cd['target_price'],
+                stop_loss=cd['stop_loss'],
+                market_analysis=cd['market_analysis'],
+                technical_indicators=cd.get('technical_indicators', ''),
+                fundamental_analysis=cd.get('fundamental_analysis', ''),
+                status=cd['status'],
+                expires_at=cd.get('expires_at'),
+                is_featured=cd.get('is_featured', False),
+                is_active=cd.get('is_active', True),
+            )
+            messages.success(request, f'Signal "{cd["name"]}" created successfully.')
+            return redirect('dashboard:signals_list')
+    else:
+        form = SignalForm(initial={'status': 'active', 'is_active': True})
+    return render(request, 'dashboard/add_signal.html', {'form': form})
+
+
+@admin_required
+def edit_signal(request, signal_id):
+    signal = get_object_or_404(Signal, id=signal_id)
+    if request.method == 'POST':
+        form = SignalForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            for field in ['name', 'signal_type', 'price', 'signal_strength', 'action',
+                          'timeframe', 'risk_level', 'entry_point', 'target_price',
+                          'stop_loss', 'market_analysis', 'technical_indicators',
+                          'fundamental_analysis', 'status', 'expires_at', 'is_featured', 'is_active']:
+                setattr(signal, field, cd.get(field) if cd.get(field) is not None else '')
+            signal.expires_at = cd.get('expires_at')
+            signal.is_featured = cd.get('is_featured', False)
+            signal.is_active = cd.get('is_active', True)
+            signal.save()
+            messages.success(request, f'Signal "{signal.name}" updated.')
+            return redirect('dashboard:signals_list')
+    else:
+        form = SignalForm(initial={
+            'name': signal.name,
+            'signal_type': signal.signal_type,
+            'price': signal.price,
+            'signal_strength': signal.signal_strength,
+            'action': signal.action,
+            'timeframe': signal.timeframe,
+            'risk_level': signal.risk_level,
+            'entry_point': signal.entry_point,
+            'target_price': signal.target_price,
+            'stop_loss': signal.stop_loss,
+            'market_analysis': signal.market_analysis,
+            'technical_indicators': signal.technical_indicators,
+            'fundamental_analysis': signal.fundamental_analysis,
+            'status': signal.status,
+            'expires_at': signal.expires_at,
+            'is_featured': signal.is_featured,
+            'is_active': signal.is_active,
+        })
+    return render(request, 'dashboard/edit_signal.html', {'form': form, 'signal': signal})
+
+
+@admin_required
+def delete_signal(request, signal_id):
+    signal = get_object_or_404(Signal, id=signal_id)
+    if request.method == 'POST':
+        name = signal.name
+        signal.delete()
+        messages.success(request, f'Signal "{name}" deleted.')
+        return redirect('dashboard:signals_list')
+    purchases_count = UserSignalPurchase.objects.filter(signal=signal).count()
+    return render(request, 'dashboard/delete_signal.html', {'signal': signal, 'purchases_count': purchases_count})
+
+
+@admin_required
+def signal_detail(request, signal_id):
+    signal = get_object_or_404(Signal, id=signal_id)
+    purchases = UserSignalPurchase.objects.filter(signal=signal).select_related('user').order_by('-purchased_at')
+    return render(request, 'dashboard/signal_detail.html', {
+        'signal': signal,
+        'purchases': purchases,
+        'purchases_count': purchases.count(),
+        'revenue': sum(p.amount_paid for p in purchases),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+
+@admin_required
+def notifications_list(request):
+    search = request.GET.get('q', '').strip()
+    type_filter = request.GET.get('type', '')
+    qs = Notification.objects.select_related('user').order_by('-created_at')
+    if search:
+        qs = qs.filter(
+            Q(title__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(message__icontains=search)
+        )
+    if type_filter:
+        qs = qs.filter(type=type_filter)
+    page_obj, paginator = _paginate(qs, request, 25)
+    return render(request, 'dashboard/notifications_list.html', {
+        'notifications': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'is_paginated': paginator.num_pages > 1,
+        'search': search,
+        'type_filter': type_filter,
+        'total_count': Notification.objects.count(),
+        'unread_count': Notification.objects.filter(read=False).count(),
+        'type_choices': Notification.TYPE_CHOICES,
+    })
+
+
+@admin_required
+def add_notification(request):
+    if request.method == 'POST':
+        form = NotificationForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            target = cd['target']
+            users = CustomUser.objects.filter(is_active=True) if target == 'all' else [cd['user']]
+            count = 0
+            for u in users:
+                Notification.objects.create(
+                    user=u,
+                    type=cd['type'],
+                    title=cd['title'],
+                    message=cd['message'],
+                    full_details=cd['full_details'],
+                )
+                count += 1
+            label = 'all users' if target == 'all' else cd['user'].email
+            messages.success(request, f'Notification sent to {label} ({count} recipient{"s" if count != 1 else ""}).')
+            return redirect('dashboard:notifications_list')
+    else:
+        form = NotificationForm()
+    return render(request, 'dashboard/add_notification.html', {'form': form})
+
+
+@admin_required
+def edit_notification(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id)
+    if request.method == 'POST':
+        # Only edit type, title, message, full_details — not user
+        notification.type = request.POST.get('type', notification.type)
+        notification.title = request.POST.get('title', notification.title).strip()
+        notification.message = request.POST.get('message', notification.message).strip()
+        notification.full_details = request.POST.get('full_details', notification.full_details).strip()
+        if not notification.title or not notification.message or not notification.full_details:
+            messages.error(request, 'Title, message and full details are required.')
+        else:
+            notification.save()
+            messages.success(request, 'Notification updated.')
+            return redirect('dashboard:notifications_list')
+    return render(request, 'dashboard/edit_notification.html', {
+        'notification': notification,
+        'type_choices': Notification.TYPE_CHOICES,
+    })
+
+
+@admin_required
+def delete_notification(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id)
+    if request.method == 'POST':
+        notification.delete()
+        messages.success(request, 'Notification deleted.')
+        return redirect('dashboard:notifications_list')
+    return render(request, 'dashboard/delete_notification.html', {'notification': notification})

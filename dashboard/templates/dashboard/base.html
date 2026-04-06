@@ -46,14 +46,20 @@
 
         <!-- Users -->
         <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Users</p>
-        <a href="{% url 'dashboard:users_trade_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'investor' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+        <a href="{% url 'dashboard:investors_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'investor' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-wallet w-5 text-center"></i>Investors
+        </a>
+        <a href="{% url 'dashboard:all_trades_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'all_trade' in request.resolver_match.url_name or 'edit_user_trade' == request.resolver_match.url_name or 'delete_user_trade' == request.resolver_match.url_name or 'user_trade_single_detail' == request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+            <i class="fas fa-chart-line w-5 text-center"></i>All Trades
         </a>
         <a href="{% url 'dashboard:users_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_detail' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-users w-5 text-center"></i>Manage Users
         </a>
         <a href="{% url 'dashboard:kyc_requests' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'kyc' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-id-card w-5 text-center"></i>KYC Requests
+        </a>
+        <a href="{% url 'dashboard:notifications_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'notification' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+            <i class="fas fa-bell w-5 text-center"></i>Notifications
         </a>
 
         <!-- Requests -->
@@ -85,6 +91,12 @@
         <a href="{% url 'dashboard:add_copy_trade' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'add_copy_trade' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-plus-circle w-5 text-center"></i>Add Copy Trade
         </a> -->
+
+        <!-- Signals -->
+        <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Signals</p>
+        <a href="{% url 'dashboard:signals_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'signal' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+            <i class="fas fa-signal w-5 text-center"></i>Trading Signals
+        </a>
 
         <!-- Settings -->
         <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Settings</p>

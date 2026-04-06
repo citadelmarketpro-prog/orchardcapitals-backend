@@ -1,0 +1,118 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Signals - Orchard Capitals Admin{% endblock %}
+{% block page_title %}Trading Signals{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="mb-4 space-y-2">
+    {% for message in messages %}
+    <div class="px-4 py-3 rounded-lg text-sm font-medium {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200/60 p-4 text-center">
+        <p class="text-2xl font-bold text-gray-800">{{ total_count }}</p>
+        <p class="text-xs text-gray-500">Total Signals</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200/60 p-4 text-center">
+        <p class="text-2xl font-bold text-emerald-600">{{ active_count }}</p>
+        <p class="text-xs text-gray-500">Active</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200/60 p-4 text-center">
+        <p class="text-2xl font-bold text-indigo-600">{{ purchases_count }}</p>
+        <p class="text-xs text-gray-500">Total Purchases</p>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="flex flex-wrap gap-3 mb-4 items-center justify-between">
+    <form method="get" class="flex flex-wrap gap-3">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search signals…"
+            class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 min-w-[200px]">
+        <select name="status" class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
+            <option value="">All Statuses</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+            <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+        </select>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-500 transition">Filter</button>
+        {% if search or status_filter %}<a href="{% url 'dashboard:signals_list' %}" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Clear</a>{% endif %}
+    </form>
+    <a href="{% url 'dashboard:add_signal' %}" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition flex items-center gap-2">
+        <i class="fas fa-plus"></i> Add Signal
+    </a>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[900px]">
+            <thead>
+                <tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase border-b border-gray-100">
+                    <th class="px-5 py-3">Name</th>
+                    <th class="px-5 py-3">Type</th>
+                    <th class="px-5 py-3">Price</th>
+                    <th class="px-5 py-3">Strength</th>
+                    <th class="px-5 py-3">Action</th>
+                    <th class="px-5 py-3">Risk</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3">Featured</th>
+                    <th class="px-5 py-3">Purchases</th>
+                    <th class="px-5 py-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for signal in signals %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-5 py-3 font-semibold text-gray-800">{{ signal.name }}</td>
+                    <td class="px-5 py-3 capitalize text-gray-600">{{ signal.signal_type }}</td>
+                    <td class="px-5 py-3 font-medium">${{ signal.price|floatformat:2 }}</td>
+                    <td class="px-5 py-3 font-semibold text-indigo-600">{{ signal.signal_strength }}%</td>
+                    <td class="px-5 py-3">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold {% if 'BUY' in signal.action|upper %}bg-emerald-50 text-emerald-700{% elif 'SELL' in signal.action|upper %}bg-red-50 text-red-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ signal.action }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-xs {% if signal.risk_level == 'low' %}bg-emerald-50 text-emerald-700{% elif signal.risk_level == 'medium' %}bg-amber-50 text-amber-700{% else %}bg-red-50 text-red-700{% endif %}">
+                            {{ signal.risk_level|title }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-xs {% if signal.status == 'active' %}bg-blue-50 text-blue-700{% elif signal.status == 'completed' %}bg-gray-100 text-gray-500{% else %}bg-red-50 text-red-700{% endif %}">
+                            {{ signal.status|title }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3 text-center">
+                        {% if signal.is_featured %}<i class="fas fa-star text-yellow-400"></i>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    </td>
+                    <td class="px-5 py-3 text-center text-gray-600">{{ signal.purchases.count }}</td>
+                    <td class="px-5 py-3">
+                        <div class="flex items-center gap-1">
+                            <a href="{% url 'dashboard:signal_detail' signal.id %}" class="px-2.5 py-1 bg-gray-50 text-gray-600 rounded text-xs font-medium hover:bg-gray-100 transition">View</a>
+                            <a href="{% url 'dashboard:edit_signal' signal.id %}" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium hover:bg-indigo-100 transition">Edit</a>
+                            <a href="{% url 'dashboard:delete_signal' signal.id %}" class="px-2.5 py-1 bg-red-50 text-red-600 rounded text-xs font-medium hover:bg-red-100 transition">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="10" class="px-5 py-12 text-center text-gray-400"><i class="fas fa-signal text-2xl mb-2 block"></i>No signals yet. <a href="{% url 'dashboard:add_signal' %}" class="text-indigo-500 hover:underline">Add one →</a></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+        <span>Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if search %}&q={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-3 py-1.5 bg-gray-100 rounded-lg text-xs hover:bg-gray-200 transition">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if search %}&q={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs hover:bg-indigo-500 transition">Next</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

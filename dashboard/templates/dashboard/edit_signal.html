@@ -1,0 +1,63 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Edit Signal — {{ signal.name }}{% endblock %}
+{% block page_title %}Edit Signal{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl">
+
+{% if form.errors %}
+<div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
+    <h4 class="font-semibold text-red-800 mb-2">Please correct the following errors:</h4>
+    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+        {% for field in form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-gray-200/60 p-5">
+    <form method="post">
+        {% csrf_token %}
+
+        <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-info-circle text-indigo-500"></i> Basic Info</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.name.label }}</label>{{ form.name }}{% if form.name.errors %}<p class="text-xs text-red-600 mt-1">{{ form.name.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.signal_type.label }}</label>{{ form.signal_type }}{% if form.signal_type.errors %}<p class="text-xs text-red-600 mt-1">{{ form.signal_type.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.price.label }}</label>{{ form.price }}{% if form.price.errors %}<p class="text-xs text-red-600 mt-1">{{ form.price.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.signal_strength.label }}</label>{{ form.signal_strength }}{% if form.signal_strength.errors %}<p class="text-xs text-red-600 mt-1">{{ form.signal_strength.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.action.label }}</label>{{ form.action }}{% if form.action.errors %}<p class="text-xs text-red-600 mt-1">{{ form.action.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.timeframe.label }}</label>{{ form.timeframe }}{% if form.timeframe.errors %}<p class="text-xs text-red-600 mt-1">{{ form.timeframe.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.risk_level.label }}</label>{{ form.risk_level }}{% if form.risk_level.errors %}<p class="text-xs text-red-600 mt-1">{{ form.risk_level.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.status.label }}</label>{{ form.status }}{% if form.status.errors %}<p class="text-xs text-red-600 mt-1">{{ form.status.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.expires_at.label }}</label>{{ form.expires_at }}{% if form.expires_at.errors %}<p class="text-xs text-red-600 mt-1">{{ form.expires_at.errors.0 }}</p>{% endif %}</div>
+        </div>
+
+        <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-crosshairs text-emerald-500"></i> Trade Levels</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.entry_point.label }}</label>{{ form.entry_point }}{% if form.entry_point.errors %}<p class="text-xs text-red-600 mt-1">{{ form.entry_point.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.target_price.label }}</label>{{ form.target_price }}{% if form.target_price.errors %}<p class="text-xs text-red-600 mt-1">{{ form.target_price.errors.0 }}</p>{% endif %}</div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.stop_loss.label }}</label>{{ form.stop_loss }}{% if form.stop_loss.errors %}<p class="text-xs text-red-600 mt-1">{{ form.stop_loss.errors.0 }}</p>{% endif %}</div>
+        </div>
+
+        <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-blue-500"></i> Analysis</h4>
+        <div class="grid grid-cols-1 gap-4 mb-6">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.market_analysis.label }}</label>{{ form.market_analysis }}{% if form.market_analysis.errors %}<p class="text-xs text-red-600 mt-1">{{ form.market_analysis.errors.0 }}</p>{% endif %}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.technical_indicators.label }}</label>{{ form.technical_indicators }}{% if form.technical_indicators.errors %}<p class="text-xs text-red-600 mt-1">{{ form.technical_indicators.errors.0 }}</p>{% endif %}</div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">{{ form.fundamental_analysis.label }}</label>{{ form.fundamental_analysis }}{% if form.fundamental_analysis.errors %}<p class="text-xs text-red-600 mt-1">{{ form.fundamental_analysis.errors.0 }}</p>{% endif %}</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 mb-6">
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer">{{ form.is_featured }} {{ form.is_featured.label }}</label>
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer">{{ form.is_active }} {{ form.is_active.label }}</label>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition">Save Changes</button>
+            <a href="{% url 'dashboard:signal_detail' signal.id %}" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}

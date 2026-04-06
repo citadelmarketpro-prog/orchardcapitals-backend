@@ -72,17 +72,6 @@
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.amount.label }}</label>
-                    {{ form.amount }}
-                    {% if form.amount.errors %}<p class="text-xs text-red-600 mt-1">{{ form.amount.errors.0 }}</p>{% endif %}
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.investment_amount.label }}</label>
-                    {{ form.investment_amount }}
-                    <p class="text-xs text-gray-400 mt-1">{{ form.investment_amount.help_text }}</p>
-                    {% if form.investment_amount.errors %}<p class="text-xs text-red-600 mt-1">{{ form.investment_amount.errors.0 }}</p>{% endif %}
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.entry_price.label }}</label>
                     {{ form.entry_price }}
                     {% if form.entry_price.errors %}<p class="text-xs text-red-600 mt-1">{{ form.entry_price.errors.0 }}</p>{% endif %}

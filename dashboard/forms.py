@@ -1,5 +1,5 @@
 from django import forms
-from app.models import CustomUser, Stock, Transaction, Trader, UserCopyTraderHistory, AdminWallet, Card
+from app.models import CustomUser, Stock, Transaction, Trader, UserCopyTraderHistory, AdminWallet, Card, Signal, Notification
 from decimal import Decimal
 
 # ---------------------------------------------------------------------------
@@ -428,6 +428,12 @@ class AddTraderForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': _checkbox})
     )
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if Trader.objects.filter(username=username).exists():
+            raise forms.ValidationError("A trader with this username already exists.")
+        return username
+
 
 class EditCopyTradeForm(AddCopyTradeForm):
     """Same fields as AddCopyTradeForm but used for editing existing copy trades."""
@@ -455,15 +461,6 @@ class AddUserDirectTradeForm(forms.Form):
     ]
     duration = forms.ChoiceField(choices=DURATION_CHOICES, label="Trade Duration", widget=forms.Select(attrs={'class': _select}))
 
-    amount = forms.DecimalField(
-        label="Base Trade Amount", max_digits=20, decimal_places=2,
-        widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '1000.00', 'step': '0.01'}),
-    )
-    investment_amount = forms.DecimalField(
-        label="User Investment Amount", max_digits=20, decimal_places=2,
-        widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '5000.00', 'step': '0.01'}),
-        help_text="Used to calculate the user's dollar P/L",
-    )
     entry_price = forms.DecimalField(
         label="Entry Price", max_digits=20, decimal_places=8,
         widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '50000.00', 'step': '0.00000001'}),
@@ -492,7 +489,18 @@ class AddUserDirectTradeForm(forms.Form):
 
 
 class EditTraderForm(AddTraderForm):
-    pass
+    def __init__(self, *args, trader_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.trader_id = trader_id
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        qs = Trader.objects.filter(username=username)
+        if self.trader_id:
+            qs = qs.exclude(id=self.trader_id)
+        if qs.exists():
+            raise forms.ValidationError("A trader with this username already exists.")
+        return username
 
 
 # ===== Admin Wallet Form =====
@@ -559,3 +567,126 @@ class CardEditForm(forms.Form):
         label="Default Card", required=False,
         widget=forms.CheckboxInput(attrs={'class': _checkbox}),
     )
+
+
+# ===== Signal Form =====
+
+class SignalForm(forms.Form):
+    name = forms.CharField(
+        label="Signal Name", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': 'e.g. AAPL, BTC/USD'}),
+    )
+    signal_type = forms.ChoiceField(
+        label="Signal Type",
+        choices=[('', 'Select Type'), ('stock', 'Stock'), ('crypto', 'Cryptocurrency'), ('forex', 'Forex'), ('commodity', 'Commodity')],
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    price = forms.DecimalField(
+        label="Signal Price ($)", max_digits=12, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '49.99', 'step': '0.01'}),
+    )
+    signal_strength = forms.DecimalField(
+        label="Signal Strength (%)", max_digits=5, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '94.50', 'step': '0.01', 'min': '0', 'max': '100'}),
+    )
+    action = forms.CharField(
+        label="Action", max_length=50,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': 'BUY / SELL / HOLD'}),
+    )
+    timeframe = forms.CharField(
+        label="Timeframe", max_length=50,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '1-2 weeks'}),
+    )
+    risk_level = forms.ChoiceField(
+        label="Risk Level",
+        choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')],
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    entry_point = forms.CharField(
+        label="Entry Point", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '$185.00 - $187.50'}),
+    )
+    target_price = forms.CharField(
+        label="Target Price", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '$210.00'}),
+    )
+    stop_loss = forms.CharField(
+        label="Stop Loss", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '$178.00'}),
+    )
+    market_analysis = forms.CharField(
+        label="Market Analysis",
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 4, 'placeholder': 'Detailed market analysis…'}),
+    )
+    technical_indicators = forms.CharField(
+        label="Technical Indicators", required=False,
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 3, 'placeholder': 'RSI: 62, MACD: Bullish crossover…'}),
+    )
+    fundamental_analysis = forms.CharField(
+        label="Fundamental Analysis", required=False,
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 3, 'placeholder': 'Fundamental notes…'}),
+    )
+    status = forms.ChoiceField(
+        label="Status",
+        choices=[('active', 'Active'), ('expired', 'Expired'), ('completed', 'Completed')],
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    expires_at = forms.DateTimeField(
+        label="Expires At (Optional)", required=False,
+        widget=forms.DateTimeInput(attrs={'class': _input, 'type': 'datetime-local'}),
+    )
+    is_featured = forms.BooleanField(
+        label="Featured Signal", required=False,
+        widget=forms.CheckboxInput(attrs={'class': _checkbox}),
+    )
+    is_active = forms.BooleanField(
+        label="Active (Visible to users)", required=False, initial=True,
+        widget=forms.CheckboxInput(attrs={'class': _checkbox}),
+    )
+
+
+# ===== Notification Form =====
+
+class NotificationForm(forms.Form):
+    TARGET_CHOICES = [
+        ('single', 'Single User'),
+        ('all', 'All Users'),
+    ]
+
+    target = forms.ChoiceField(
+        label="Send To",
+        choices=TARGET_CHOICES,
+        widget=forms.Select(attrs={'class': _select}),
+        initial='single',
+    )
+    user = forms.ModelChoiceField(
+        label="User",
+        queryset=CustomUser.objects.filter(is_active=True).order_by('email'),
+        required=False,
+        empty_label="Select a user…",
+        widget=forms.Select(attrs={'class': _select}),
+        help_text="Required when sending to a single user",
+    )
+    type = forms.ChoiceField(
+        label="Notification Type",
+        choices=Notification.TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    title = forms.CharField(
+        label="Title", max_length=255,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': 'e.g. Trade Executed Successfully'}),
+    )
+    message = forms.CharField(
+        label="Short Message",
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 2, 'placeholder': 'Brief summary shown in notification list…'}),
+    )
+    full_details = forms.CharField(
+        label="Full Details",
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 4, 'placeholder': 'Full notification body shown when user opens the notification…'}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('target') == 'single' and not cleaned_data.get('user'):
+            self.add_error('user', 'Please select a user.')
+        return cleaned_data

@@ -365,6 +365,44 @@ def get_withdrawal_history(request):
     })
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_withdrawal(request, transaction_id):
+    """Cancel a pending withdrawal. Only the owner can cancel, and only while pending."""
+    user = request.user
+    try:
+        transaction = Transaction.objects.get(
+            id=transaction_id,
+            user=user,
+            transaction_type="withdrawal",
+        )
+    except Transaction.DoesNotExist:
+        return Response({"success": False, "error": "Withdrawal not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if transaction.status != "pending":
+        return Response(
+            {"success": False, "error": "Only pending withdrawals can be cancelled."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    transaction.status = "cancelled"
+    transaction.save()
+
+    Notification.objects.create(
+        user=user,
+        type="withdrawal",
+        title="Withdrawal Cancelled",
+        message=f"Your withdrawal of ${transaction.amount:.2f} via {transaction.currency} has been cancelled.",
+        full_details=(
+            f"Withdrawal reference: {transaction.reference}. "
+            f"Amount: ${transaction.amount:.2f} via {transaction.currency} was cancelled by you."
+        ),
+        metadata={"transaction_id": transaction.id, "reference": transaction.reference},
+    )
+
+    return Response({"success": True, "message": "Withdrawal cancelled successfully."})
+
+
 # ============================================================
 # COMBINED TRANSACTION HISTORY
 # ============================================================

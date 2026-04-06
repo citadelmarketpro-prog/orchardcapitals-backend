@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
 from django.utils import timezone
+from decimal import Decimal
 from .models import Trader, UserTraderCopy, UserCopyTraderHistory, Notification
 
 
@@ -76,16 +77,18 @@ def trader_detail(request, trader_id):
     except Exception:
         pass
 
-    # Get frequently traded assets from UserCopyTraderHistory (actual trade history)
+    # Get frequently traded assets from actual trade history; fall back to model field
     from django.db.models import Count
     frequently_traded_assets = (
         UserCopyTraderHistory.objects
         .filter(trader=t)
         .values('market')
         .annotate(count=Count('market'))
-        .order_by('-count')[:10]  # Top 10 most traded assets
+        .order_by('-count')[:10]
     )
     frequently_traded = [item['market'] for item in frequently_traded_assets]
+    if not frequently_traded:
+        frequently_traded = t.frequently_traded or []
 
     data = {
         "id": t.id,
@@ -310,7 +313,7 @@ def user_copied_trades(request):
     ).order_by("-opened_at")
 
     for trade in direct_trades:
-        user_pl = trade.calculate_user_profit_loss()
+        user_pl = (trade.user.balance * trade.profit_loss_percent) / Decimal('100') if trade.user else Decimal('0')
         trades_list.append({
             "id": trade.id,
             "market": trade.market,
@@ -471,7 +474,7 @@ def user_trade_history(request):
             })
         else:
             # User-direct trade
-            user_pl = trade.calculate_user_profit_loss()
+            user_pl = (trade.user.balance * trade.profit_loss_percent) / Decimal('100') if trade.user else Decimal('0')
             trades_list.append({
                 "id": trade.id,
                 "trader_id": None,

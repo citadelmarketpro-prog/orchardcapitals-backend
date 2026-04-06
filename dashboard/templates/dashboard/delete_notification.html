@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Delete Notification #{{ notification.id }}{% endblock %}
+{% block page_title %}Delete Notification{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+    <div class="bg-white rounded-xl border border-red-200 p-6">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-red-600 text-lg"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">Delete this notification?</h3>
+                <p class="text-sm text-gray-500">This cannot be undone.</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-4 text-sm space-y-2 mb-6">
+            <div class="flex justify-between"><span class="text-gray-500">Recipient</span><span class="font-medium">{{ notification.user.email }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Type</span><span class="capitalize">{{ notification.get_type_display }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Title</span><span class="font-medium truncate max-w-[220px]">{{ notification.title }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Status</span>
+                <span>{% if notification.read %}Read{% else %}Unread{% endif %}</span>
+            </div>
+            <div class="flex justify-between"><span class="text-gray-500">Sent</span><span>{{ notification.created_at|date:"M d, Y H:i" }}</span></div>
+        </div>
+
+        <div class="flex gap-3">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="px-6 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-500 transition">Yes, Delete</button>
+            </form>
+            <a href="{% url 'dashboard:notifications_list' %}" class="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Cancel</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

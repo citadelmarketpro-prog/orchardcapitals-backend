@@ -1,0 +1,40 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Delete Signal — {{ signal.name }}{% endblock %}
+{% block page_title %}Delete Signal{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+    <div class="bg-white rounded-xl border border-red-200 p-6">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-red-600 text-lg"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">Delete "{{ signal.name }}"?</h3>
+                <p class="text-sm text-gray-500">This cannot be undone.</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-4 text-sm space-y-2 mb-6">
+            <div class="flex justify-between"><span class="text-gray-500">Name</span><span class="font-medium">{{ signal.name }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Type</span><span class="capitalize">{{ signal.signal_type }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Price</span><span>${{ signal.price|floatformat:2 }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Status</span><span class="capitalize">{{ signal.status }}</span></div>
+            {% if purchases_count > 0 %}
+            <div class="pt-2 border-t border-gray-200 text-amber-700 text-xs">
+                <i class="fas fa-info-circle mr-1"></i>
+                {{ purchases_count }} user{{ purchases_count|pluralize }} ha{{ purchases_count|pluralize:"s,ve" }} purchased this signal. Their purchase records will also be deleted.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex gap-3">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="px-6 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-500 transition">Yes, Delete Signal</button>
+            </form>
+            <a href="{% url 'dashboard:signal_detail' signal.id %}" class="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Cancel</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
