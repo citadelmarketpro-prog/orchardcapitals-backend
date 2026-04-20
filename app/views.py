@@ -214,6 +214,8 @@ def get_withdrawal_profile(request):
             "account_id": user.account_id or "",
             "balance": str(user.balance),
             "formatted_balance": f"${user.balance:,.2f}",
+            "profit": str(user.profit),
+            "formatted_profit": f"${user.profit:,.2f}",
             "is_verified": user.is_verified,
         },
     })
@@ -264,6 +266,10 @@ def create_withdrawal(request):
     method_type = request.data.get("method_type")
     amount = request.data.get("amount")
     withdrawal_address = request.data.get("withdrawal_address", "")
+    source = request.data.get("source", "balance")
+
+    if source not in ("balance", "profit"):
+        source = "balance"
 
     if not method_type or not amount:
         return Response({
@@ -281,14 +287,21 @@ def create_withdrawal(request):
             "error": "Please enter a valid amount.",
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check balance
-    if amount_val > float(user.balance):
-        return Response({
-            "success": False,
-            "error": f"Insufficient balance. Your balance is ${user.balance:,.2f}",
-        }, status=status.HTTP_400_BAD_REQUEST)
+    # Check correct source balance
+    if source == "profit":
+        if amount_val > float(user.profit):
+            return Response({
+                "success": False,
+                "error": f"Insufficient profit. Your profit balance is ${user.profit:,.2f}",
+            }, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        if amount_val > float(user.balance):
+            return Response({
+                "success": False,
+                "error": f"Insufficient balance. Your balance is ${user.balance:,.2f}",
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Create transaction (status=pending, balance NOT touched)
+    # Create transaction (status=pending, balance NOT touched yet)
     reference = f"WDR-{random.randint(100000, 999999)}-{user.id}"
 
     transaction = Transaction.objects.create(
@@ -298,18 +311,22 @@ def create_withdrawal(request):
         currency=method_type,
         status="pending",
         reference=reference,
-        description=f"Withdrawal of ${amount_val} via {method_type} to {withdrawal_address}",
+        source=source,
+        description=f"Withdrawal of ${amount_val} via {method_type} to {withdrawal_address} (from {source})",
     )
+
+    source_label = "profit" if source == "profit" else "main balance"
 
     # Create notification
     Notification.objects.create(
         user=user,
         type="withdrawal",
         title="Withdrawal Request Submitted",
-        message=f"Your withdrawal of ${amount_val:.2f} via {method_type} is pending approval.",
-        full_details=f"Withdrawal reference: {reference}. Amount: ${amount_val:.2f}. Method: {method_type}. Address: {withdrawal_address}. This withdrawal is pending admin approval.",
+        message=f"Your withdrawal of ${amount_val:.2f} from {source_label} via {method_type} is pending approval.",
+        full_details=f"Withdrawal reference: {reference}. Amount: ${amount_val:.2f}. Source: {source_label}. Method: {method_type}. Address: {withdrawal_address}. This withdrawal is pending admin approval.",
         metadata={
             "amount": str(amount_val),
+            "source": source,
             "method": method_type,
             "reference": reference,
             "address": withdrawal_address,
@@ -325,8 +342,11 @@ def create_withdrawal(request):
             "amount": str(transaction.amount),
             "currency": transaction.currency,
             "status": transaction.status,
+            "source": transaction.source,
             "new_balance": str(user.balance),
             "formatted_new_balance": f"${user.balance:,.2f}",
+            "new_profit": str(user.profit),
+            "formatted_new_profit": f"${user.profit:,.2f}",
             "created_at": transaction.created_at.isoformat(),
         },
     })

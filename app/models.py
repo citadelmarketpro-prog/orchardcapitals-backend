@@ -1125,6 +1125,18 @@ class Transaction(models.Model):
     currency = models.CharField(max_length=100)
     unit = models.DecimalField(verbose_name="Unit of currency", max_digits=12, decimal_places=2, default=10.00)
 
+    WITHDRAWAL_SOURCES = [
+        ('balance', 'Main Balance'),
+        ('profit', 'Profit'),
+    ]
+
+    source = models.CharField(
+        max_length=10,
+        choices=WITHDRAWAL_SOURCES,
+        default='balance',
+        blank=True,
+    )
+
     receipt = CloudinaryField(
         "receipt",
         folder="receipt",
@@ -1132,8 +1144,6 @@ class Transaction(models.Model):
         null=True,
         help_text="Here's the receipt for the transaction.",
     )
-
-    
 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

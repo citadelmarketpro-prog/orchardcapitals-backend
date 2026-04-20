@@ -451,18 +451,25 @@ def withdrawal_detail(request, transaction_id):
             admin_notes = form.cleaned_data['admin_notes']
             withdrawal.status = status
             withdrawal.save()
+            source = withdrawal.source or 'balance'
+            source_label = 'profit' if source == 'profit' else 'main balance'
             if status == 'completed':
+                # Deduct from the correct source
+                if source == 'profit':
+                    withdrawal.user.profit -= withdrawal.amount
+                else:
+                    withdrawal.user.balance -= withdrawal.amount
+                withdrawal.user.save()
                 Notification.objects.create(user=withdrawal.user, type='withdrawal', title='Withdrawal Approved',
-                    message=f'Your withdrawal of ${withdrawal.amount} has been processed.',
-                    full_details=f'Amount: ${withdrawal.amount}\nReference: {withdrawal.reference}')
+                    message=f'Your withdrawal of ${withdrawal.amount} from {source_label} has been processed.',
+                    full_details=f'Amount: ${withdrawal.amount}\nSource: {source_label}\nReference: {withdrawal.reference}')
                 messages.success(request, f'Withdrawal approved for {withdrawal.user.email}')
             else:
-                withdrawal.user.balance += withdrawal.amount
-                withdrawal.user.save()
+                # Balance was never deducted — just notify the user
                 Notification.objects.create(user=withdrawal.user, type='alert', title='Withdrawal Rejected',
                     message=f'Your withdrawal of ${withdrawal.amount} was not processed.',
-                    full_details=admin_notes or 'Amount has been refunded to your balance.')
-                messages.warning(request, f'Withdrawal rejected — amount refunded to {withdrawal.user.email}')
+                    full_details=admin_notes or 'Your withdrawal request has been rejected.')
+                messages.warning(request, f'Withdrawal rejected for {withdrawal.user.email}')
             return redirect('dashboard:withdrawals')
     else:
         form = ApproveWithdrawalForm()
