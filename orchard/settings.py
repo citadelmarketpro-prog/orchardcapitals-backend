@@ -67,8 +67,6 @@ cloudinary.config(
     api_secret=config("CLOUDINARY_API_SECRET"),
 )
 
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -266,7 +264,6 @@ WHITENOISE_AUTOREFRESH = DEBUG
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8001",
     "http://127.0.0.1:3001",
@@ -274,9 +271,15 @@ CORS_ALLOWED_ORIGINS = [
     "https://orchardcapitals.com",
     "https://www.orchardcapitals.com",
     "https://orchardcapitals-backend.vercel.app",
-    "https://orchardcapitals.vercel.app",
-    "https://orchardcapitals-backend.vercel.app",
 ]
+
+_render_url = config('RENDER_EXTERNAL_URL', default='')
+if _render_url:
+    CORS_ALLOWED_ORIGINS.append(_render_url)
+
+_frontend_url = config('FRONTEND_URL', default='')
+if _frontend_url and _frontend_url not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append(_frontend_url)
 
 
 CORS_ALLOW_CREDENTIALS = True
@@ -341,7 +344,6 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
     'http://localhost:8000',
@@ -352,8 +354,12 @@ CSRF_TRUSTED_ORIGINS = [
     'https://orchardcapitals.com',
     "https://www.orchardcapitals.com",
     'https://orchardcapitals-backend.vercel.app',
-    "https://orchardcapitals.vercel.app",
 ]
+
+if _render_url and _render_url not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(_render_url)
+if _frontend_url and _frontend_url not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(_frontend_url)
 
 X_FRAME_OPTIONS = 'DENY'
 
