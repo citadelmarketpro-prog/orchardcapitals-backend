@@ -267,6 +267,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8001",
     "http://127.0.0.1:3001",
+    "https://orchardcapitals.netlify.app",
     "https://orchardcapitals.vercel.app",
     "https://orchardcapitals.com",
     "https://www.orchardcapitals.com",
