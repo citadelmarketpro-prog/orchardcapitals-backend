@@ -13,11 +13,19 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+
+
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+
+
 from decouple import config
+
+
+
 import dj_database_url
+
 
 
 
@@ -32,7 +40,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default="jx&4!ho&4388ptvf6o1o^SCope#2@Trad")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
+# DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -189,12 +198,20 @@ WSGI_APPLICATION = 'orchard.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
-        conn_max_age=600
-    )
-}
+if dj_database_url:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=config('DATABASE_URL', default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+            conn_max_age=600
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # DATABASES = {
 #     'default': {
@@ -251,8 +268,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 if (BASE_DIR / "static").exists():
     STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# Move STATICFILES_STORAGE after STATIC_ROOT
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# Use manifest storage only in production; in dev, serve files directly
+if DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # WhiteNoise configuration
 WHITENOISE_USE_FINDERS = True
