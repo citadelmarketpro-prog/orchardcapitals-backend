@@ -64,6 +64,42 @@ def _pick(custom, dropdown, fallback):
     return fallback
 
 
+def _notify_trade(user, cd, pnl, reference):
+    """Create a trade notification for a user-direct trade."""
+    market = cd['market']
+    direction = cd['direction'].upper()
+    entry = cd['entry_price']
+    pct = cd['profit_loss_percent']
+    is_closed = cd['status'] == 'closed'
+    is_profit = pnl >= 0
+    sign = '+' if is_profit else '-'
+
+    if is_closed:
+        title = f'Trade {"Profit" if is_profit else "Loss"}: {market}'
+        message = (
+            f'Your {direction} trade on {market} closed '
+            f'{sign}${abs(pnl):,.2f} ({sign}{abs(pct)}%)'
+        )
+    else:
+        title = f'New Trade Opened: {market}'
+        message = f'Your {direction} trade on {market} at ${entry} is now open.'
+
+    Notification.objects.create(
+        user=user,
+        type='trade',
+        title=title,
+        message=message,
+        full_details=(
+            f'Market: {market}\n'
+            f'Direction: {direction}\n'
+            f'Entry Price: ${entry}\n'
+            f'P/L: {sign}${abs(pnl):,.2f} ({sign}{abs(pct)}%)\n'
+            f'Status: {"Closed" if is_closed else "Open"}\n'
+            f'Reference: {reference}'
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
@@ -1145,10 +1181,11 @@ def add_user_trade(request, user_id):
                 notes=cd.get('notes', ''),
                 reference=reference,
             )
+            pnl = (viewed_user.balance * cd['profit_loss_percent']) / Decimal('100')
             if cd['status'] == 'closed':
-                profit = (viewed_user.balance * cd['profit_loss_percent']) / Decimal('100')
-                viewed_user.profit = (viewed_user.profit or Decimal('0.00')) + profit
+                viewed_user.profit = (viewed_user.profit or Decimal('0.00')) + pnl
                 viewed_user.save(update_fields=['profit'])
+            _notify_trade(viewed_user, cd, pnl, reference)
             messages.success(request, f'Trade added successfully for {viewed_user.email}')
             return redirect('dashboard:user_trade_detail', user_id=viewed_user.id)
     else:
@@ -1208,10 +1245,11 @@ def bulk_add_user_trade(request):
                         notes=cd.get('notes', ''),
                         reference=reference,
                     )
+                    pnl = (u.balance * cd['profit_loss_percent']) / Decimal('100')
                     if cd['status'] == 'closed':
-                        profit = (u.balance * cd['profit_loss_percent']) / Decimal('100')
-                        u.profit = (u.profit or Decimal('0.00')) + profit
+                        u.profit = (u.profit or Decimal('0.00')) + pnl
                         u.save(update_fields=['profit'])
+                    _notify_trade(u, cd, pnl, reference)
                     created_count += 1
                 messages.success(request, f'Trade added for {created_count} user(s) successfully.')
                 return redirect('dashboard:users_trade_list')
