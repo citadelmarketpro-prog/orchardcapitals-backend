@@ -178,6 +178,18 @@ def copy_trader_action(request):
                 "error": f"Insufficient balance. You need at least ${trader.min_account_threshold} to copy {trader.name}. Your balance: ${user.balance}",
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Block copying a second trader while already copying another
+        active_copy = UserTraderCopy.objects.filter(
+            user=user,
+            is_actively_copying=True,
+        ).exclude(trader_id=trader_id).select_related("trader").first()
+
+        if active_copy:
+            return Response({
+                "success": False,
+                "error": f"You are already copying {active_copy.trader.name}. You must cancel and wait for admin approval before copying another trader.",
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         copy_record, created = UserTraderCopy.objects.get_or_create(
             user=user,
             trader=trader,
@@ -261,6 +273,37 @@ def copy_trader_status(request, trader_id):
             "is_copying": False,
             "cancel_requested": False,
         })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def copy_trader_active(request):
+    """Return the single trader the user is actively copying, if any."""
+    active = UserTraderCopy.objects.filter(
+        user=request.user,
+        is_actively_copying=True,
+    ).select_related("trader").first()
+
+    if active:
+        t = active.trader
+        avatar_url = t.avatar.url if t.avatar else None
+        return Response({
+            "success": True,
+            "is_copying": True,
+            "trader_id": t.id,
+            "trader_name": t.name,
+            "trader_username": t.username,
+            "trader_avatar_url": avatar_url,
+            "trader_min_capital": str(t.min_account_threshold),
+            "cancel_requested": active.cancel_requested,
+        })
+    return Response({
+        "success": True,
+        "is_copying": False,
+        "trader_id": None,
+        "trader_name": None,
+        "cancel_requested": False,
+    })
 
 
 @api_view(["GET"])
