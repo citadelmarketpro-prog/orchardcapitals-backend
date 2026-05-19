@@ -81,7 +81,7 @@ def connect_wallet(request):
         type="system",
         title="Wallet Connected Successfully",
         message=f"{wallet_name} has been connected to your account",
-        full_details=f"You have successfully connected your {wallet_name} to your ScopTrade account. You can now use this wallet for transactions and trading activities.",
+        full_details=f"You have successfully connected your {wallet_name} to your Orchard account. You can now use this wallet for transactions and trading activities.",
         metadata={
             "wallet_name": wallet_name,
             "wallet_type": wallet_type,
