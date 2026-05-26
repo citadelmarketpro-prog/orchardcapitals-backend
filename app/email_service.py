@@ -1,12 +1,10 @@
 """
 Email service for Orchard Capitals
-Handles all email sending functionality using SMTP
+Handles all email sending functionality using Resend
 """
 
-import smtplib
 import random
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
@@ -189,35 +187,17 @@ def generate_verification_code():
 
 
 def send_email(to_email, subject, html_content):
-    """Send HTML email using SMTP"""
+    """Send HTML email using Resend"""
     try:
-        smtp_host     = settings.EMAIL_HOST
-        smtp_port     = settings.EMAIL_PORT
-        smtp_username = settings.EMAIL_HOST_USER
-        smtp_password = settings.EMAIL_HOST_PASSWORD
-        from_email    = settings.DEFAULT_FROM_EMAIL
-
-        message = MIMEMultipart('alternative')
-        message['Subject'] = subject
-        message['From']    = from_email
-        message['To']      = to_email
-
-        html_part = MIMEText(html_content, 'html')
-        message.attach(html_part)
-
-        if settings.EMAIL_USE_TLS:
-            server = smtplib.SMTP(smtp_host, smtp_port)
-            server.starttls()
-        else:
-            server = smtplib.SMTP_SSL(smtp_host, smtp_port)
-
-        server.login(smtp_username, smtp_password)
-        server.sendmail(from_email, to_email, message.as_string())
-        server.quit()
-
-        logger.info(f"Email sent successfully to {to_email}")
+        resend.api_key = settings.RESEND_API_KEY
+        response = resend.Emails.send({
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
+        })
+        logger.info(f"Email sent to {to_email}, id: {getattr(response, 'id', response)}")
         return True
-
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
