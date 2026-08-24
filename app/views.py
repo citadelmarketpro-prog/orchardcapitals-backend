@@ -4,6 +4,7 @@ HTTPOnly Cookie-based Token Authentication
 """
 
 import random
+from decimal import Decimal
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,8 +12,33 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import AdminWallet, Transaction, PaymentMethod, Notification
-from .email_service import send_admin_payment_intent_notification
+from .models import AdminWallet, Transaction, PaymentMethod, Notification, Stock
+from .email_service import send_admin_payment_intent_notification, send_admin_withdrawal_notification
+
+# Maps the base currency code of an AdminWallet to its FMP Stock symbol.
+# Kept in sync with sync_crypto_rates.py's CRYPTO_SYMBOLS.
+_CRYPTO_TO_STOCK = {
+    'BTC': 'BTCUSD', 'ETH': 'ETHUSD', 'SOL': 'SOLUSD',
+    'BNB': 'BNBUSD', 'XRP': 'XRPUSD', 'TRX': 'TRXUSD',
+}
+_STABLECOINS = {'USDT', 'USDC', 'DAI', 'BUSD'}
+
+
+def _live_rate(currency_code):
+    """Return live USD-per-unit rate from the Stock table (kept fresh by the
+    sync_crypto_rates cron), or None if not available. Reading from this table
+    instead of calling FMP live on every request avoids per-request latency
+    and rate-limit failures silently degrading to a stale admin-set rate."""
+    base = currency_code.split()[0]
+    if base in _STABLECOINS:
+        return Decimal('1.000000')
+    sym = _CRYPTO_TO_STOCK.get(base)
+    if sym:
+        try:
+            return Stock.objects.get(symbol=sym).price
+        except Stock.DoesNotExist:
+            pass
+    return None
 
 
 # ============================================================
@@ -37,11 +63,13 @@ def get_deposit_options(request):
             except Exception:
                 qr_code_url = None
 
+        rate = _live_rate(w.currency)
         wallet_list.append({
             "id": w.id,
             "currency": w.currency,
             "currency_display": w.get_currency_display(),
-            "amount": str(w.amount),
+            "amount": str(rate) if rate is not None else str(w.amount),
+            "rate_is_live": rate is not None,
             "wallet_address": w.wallet_address,
             "qr_code_url": qr_code_url,
             "is_active": w.is_active,
@@ -51,6 +79,37 @@ def get_deposit_options(request):
         "success": True,
         "wallets": wallet_list,
     })
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def sync_trigger(request, sync_type):
+    """
+    Called by cronjob.com to run scheduled management commands.
+    Protected by X-Sync-Secret header matching SYNC_SECRET env var.
+    sync_type: 'prices' | 'rates' | 'news'
+    """
+    from decouple import config
+    from django.core.management import call_command
+
+    secret = config("SYNC_SECRET", default="")
+    if not secret or request.headers.get("X-Sync-Secret") != secret:
+        return Response({"success": False, "error": "Unauthorized"}, status=401)
+
+    ALLOWED = {
+        "prices": "sync_stock_prices",
+        "rates":  "sync_crypto_rates",
+        "news":   "fetch_fmp_news",
+    }
+    cmd = ALLOWED.get(sync_type)
+    if not cmd:
+        return Response({"success": False, "error": "Unknown sync type"}, status=400)
+
+    try:
+        call_command(cmd)
+        return Response({"success": True, "ran": cmd})
+    except Exception as e:
+        return Response({"success": False, "error": str(e)}, status=500)
 
 
 @api_view(["POST"])
@@ -331,6 +390,10 @@ def create_withdrawal(request):
             "reference": reference,
             "address": withdrawal_address,
         },
+    )
+
+    send_admin_withdrawal_notification(
+        user, transaction, method_type=method_type, address=withdrawal_address,
     )
 
     return Response({

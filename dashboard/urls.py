@@ -36,6 +36,7 @@ urlpatterns = [
     path('add-trade/', views.add_trade, name='add_trade'),
     path('add-earnings/', views.add_earnings, name='add_earnings'),
     path('api/assets-by-type/', views.get_assets_by_type, name='get_assets_by_type'),
+    path('api/fmp-search/', views.fmp_symbol_search, name='fmp_symbol_search'),
 
     # Copy Trading
     path('copy-trades/', views.copy_trades_list, name='copy_trades_list'),

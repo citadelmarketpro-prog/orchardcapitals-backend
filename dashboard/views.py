@@ -620,6 +620,17 @@ def get_assets_by_type(request):
     return JsonResponse({'assets': data})
 
 
+@admin_required
+def fmp_symbol_search(request):
+    """FMP symbol search endpoint for admin autocomplete. Returns JSON."""
+    from app import fmp_client
+    q = request.GET.get("q", "").strip()
+    if len(q) < 1:
+        return JsonResponse([], safe=False)
+    results = fmp_client.search_symbols(q, limit=15)
+    return JsonResponse(results, safe=False)
+
+
 # ---------------------------------------------------------------------------
 # Copy Trading
 # ---------------------------------------------------------------------------

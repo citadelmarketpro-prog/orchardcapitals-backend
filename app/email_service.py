@@ -838,19 +838,13 @@ def send_admin_deposit_notification(user, transaction):
 # 7. Admin — New Withdrawal Notification
 # ---------------------------------------------------------------------------
 
-def send_admin_withdrawal_notification(user, transaction, payment_method=None):
+def send_admin_withdrawal_notification(user, transaction, method_type=None, address=None, bank_name=None):
     admin_email = settings.ADMIN_NOTIFICATION_EMAIL if hasattr(settings, 'ADMIN_NOTIFICATION_EMAIL') else settings.EMAIL_HOST_USER
     subject = f"[WITHDRAWAL] {user.email} - ${transaction.amount}"
 
-    payment_method_info = "Not specified"
-    payment_address     = "N/A"
-    bank_row            = ""
-
-    if payment_method:
-        payment_method_info = payment_method.method_type
-        payment_address     = payment_method.address or payment_method.bank_account_number or "N/A"
-        if payment_method.bank_name:
-            bank_row = _info_row("Bank Name", payment_method.bank_name)
+    payment_method_info = method_type or "Not specified"
+    payment_address     = address or "N/A"
+    bank_row            = _info_row("Bank Name", bank_name) if bank_name else ""
 
     kyc_status = '&#9989; Verified' if user.is_verified else ('&#9203; Pending' if user.has_submitted_kyc else '&#10060; Not Submitted')
 
@@ -868,7 +862,7 @@ def send_admin_withdrawal_notification(user, transaction, payment_method=None):
       <tr><td align="center">
         <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG};">
 
-          {_header("Withdrawal Request", "Urgent &mdash; user balance has been deducted.", "A withdrawal is awaiting processing.")}
+          {_header("Withdrawal Request", "Action required &mdash; pending approval.", "A withdrawal is awaiting your review.")}
 
           <!-- Body -->
           <tr>
@@ -883,7 +877,7 @@ def send_admin_withdrawal_notification(user, transaction, payment_method=None):
                         <td style="padding:28px 32px;">
                           <p style="margin:0 0 4px; font-size:11px; font-weight:600; color:#6b7280; letter-spacing:1.5px; text-transform:uppercase;">Withdrawal Amount</p>
                           <p style="margin:0 0 6px; font-size:40px; font-weight:700; color:#ef4444; line-height:1.1;">${transaction.amount}</p>
-                          <p style="margin:0; font-size:14px; color:#9ca3af;">Balance after deduction: <strong style="color:#f9fafb;">${user.balance}</strong></p>
+                          <p style="margin:0; font-size:14px; color:#9ca3af;">Current balance (unchanged until approved): <strong style="color:#f9fafb;">${user.balance}</strong></p>
                         </td>
                         <td align="right" valign="middle" style="padding:28px 32px;">
                           <span style="display:inline-block; background-color:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:6px 14px; border-radius:20px; letter-spacing:0.5px;">PENDING</span>
@@ -896,7 +890,7 @@ def send_admin_withdrawal_notification(user, transaction, payment_method=None):
                       <tr>
                         <td style="padding:16px 20px;">
                           <p style="margin:0; font-size:13px; color:#9f1239; line-height:1.6;">
-                            <strong>&#128680; Urgent:</strong> The user's balance has already been deducted. Please process this withdrawal promptly, or reverse the transaction if unable to complete.
+                            <strong>&#128276; Pending review:</strong> The user's balance has not been deducted yet. Please review and approve or reject this withdrawal request.
                           </p>
                         </td>
                       </tr>
