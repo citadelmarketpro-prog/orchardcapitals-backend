@@ -9,15 +9,160 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         ::-webkit-scrollbar{width:6px}
-        ::-webkit-scrollbar-track{background:#1e293b}
-        ::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
-        ::-webkit-scrollbar-thumb:hover{background:#64748b}
+        ::-webkit-scrollbar-track{background:#0f172a}
+        ::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:#475569}
         .sidebar{transform:translateX(-100%);transition:transform .3s ease}
         .sidebar.show{transform:translateX(0)}
         @media(min-width:1024px){.sidebar{transform:translateX(0)}}
+
+        /* ===== DARK MODE ===== */
+        body { background-color: #0f172a !important; color: #e2e8f0; }
+
+        /* Backgrounds */
+        .bg-white           { background-color: #1e293b !important; }
+        .bg-white\/80       { background-color: rgba(15,23,42,0.85) !important; }
+        .bg-white\/5        { background-color: rgba(255,255,255,0.05) !important; }
+        .bg-gray-50         { background-color: #0f172a !important; }
+        .bg-gray-50\/50     { background-color: rgba(15,23,42,0.5) !important; }
+        .bg-gray-100        { background-color: #1e293b !important; }
+        .bg-gray-200        { background-color: #334155 !important; }
+        .bg-gray-300        { background-color: #475569 !important; }
+        .bg-gray-500        { background-color: #64748b !important; }
+        .bg-gray-600        { background-color: #475569 !important; }
+
+        /* Text */
+        .text-gray-900      { color: #f8fafc !important; }
+        .text-gray-800      { color: #f1f5f9 !important; }
+        .text-gray-700      { color: #e2e8f0 !important; }
+        .text-gray-600      { color: #cbd5e1 !important; }
+        .text-gray-500      { color: #94a3b8 !important; }
+        .text-gray-400      { color: #64748b !important; }
+        .text-gray-300      { color: #94a3b8 !important; }
+
+        /* Borders */
+        .border-gray-200    { border-color: #334155 !important; }
+        .border-gray-100    { border-color: #1e293b !important; }
+        .border-gray-300    { border-color: #475569 !important; }
+        .border-gray-200\/60 { border-color: rgba(51,65,85,0.6) !important; }
+        .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
+
+        /* Status backgrounds — darkened for dark mode */
+        .bg-red-50          { background-color: rgba(127,29,29,0.25) !important; }
+        .bg-red-100         { background-color: rgba(127,29,29,0.35) !important; }
+        .bg-emerald-50      { background-color: rgba(5,78,22,0.25) !important; }
+        .bg-emerald-100     { background-color: rgba(5,78,22,0.35) !important; }
+        .bg-amber-50        { background-color: rgba(120,53,15,0.25) !important; }
+        .bg-amber-50\/30    { background-color: rgba(120,53,15,0.15) !important; }
+        .bg-amber-100       { background-color: rgba(120,53,15,0.35) !important; }
+        .bg-blue-50         { background-color: rgba(23,37,84,0.25) !important; }
+        .bg-blue-100        { background-color: rgba(23,37,84,0.35) !important; }
+        .bg-indigo-50       { background-color: rgba(49,46,129,0.25) !important; }
+        .bg-indigo-100      { background-color: rgba(49,46,129,0.35) !important; }
+        .bg-indigo-200      { background-color: rgba(49,46,129,0.45) !important; }
+        .bg-yellow-50       { background-color: rgba(120,53,15,0.25) !important; }
+        .bg-orange-50       { background-color: rgba(124,45,18,0.25) !important; }
+        .bg-orange-50\/40   { background-color: rgba(124,45,18,0.18) !important; }
+        .bg-orange-100      { background-color: rgba(124,45,18,0.35) !important; }
+        .bg-purple-50       { background-color: rgba(76,29,149,0.25) !important; }
+        .bg-purple-100      { background-color: rgba(76,29,149,0.35) !important; }
+        .bg-cyan-50         { background-color: rgba(8,51,68,0.25) !important; }
+        .bg-cyan-100        { background-color: rgba(8,51,68,0.35) !important; }
+        .bg-rose-50         { background-color: rgba(136,19,55,0.25) !important; }
+
+        /* Status text — lightened for dark backgrounds */
+        .text-red-800       { color: #fca5a5 !important; }
+        .text-red-700       { color: #f87171 !important; }
+        .text-red-600       { color: #f87171 !important; }
+        .text-red-500       { color: #fca5a5 !important; }
+        .text-red-400       { color: #fca5a5 !important; }
+        .text-red-300       { color: #fca5a5 !important; }
+        .text-rose-500      { color: #fda4af !important; }
+        .text-emerald-800   { color: #86efac !important; }
+        .text-emerald-700   { color: #4ade80 !important; }
+        .text-emerald-600   { color: #6ee7b7 !important; }
+        .text-emerald-500   { color: #6ee7b7 !important; }
+        .text-emerald-400   { color: #6ee7b7 !important; }
+        .text-green-500     { color: #4ade80 !important; }
+        .text-amber-800     { color: #fde68a !important; }
+        .text-amber-700     { color: #fcd34d !important; }
+        .text-amber-600     { color: #fcd34d !important; }
+        .text-amber-500     { color: #fcd34d !important; }
+        .text-amber-400     { color: #fcd34d !important; }
+        .text-yellow-700    { color: #fde047 !important; }
+        .text-yellow-600    { color: #facc15 !important; }
+        .text-yellow-500    { color: #fde047 !important; }
+        .text-yellow-400    { color: #fde047 !important; }
+        .text-blue-700      { color: #93c5fd !important; }
+        .text-blue-600      { color: #60a5fa !important; }
+        .text-blue-500      { color: #93c5fd !important; }
+        .text-blue-800      { color: #bfdbfe !important; }
+        .text-indigo-800    { color: #a5b4fc !important; }
+        .text-indigo-700    { color: #818cf8 !important; }
+        .text-indigo-600    { color: #a5b4fc !important; }
+        .text-indigo-500    { color: #a5b4fc !important; }
+        .text-indigo-400    { color: #a5b4fc !important; }
+        .text-cyan-700      { color: #67e8f9 !important; }
+        .text-orange-700    { color: #fb923c !important; }
+        .text-orange-600    { color: #f97316 !important; }
+        .text-orange-500    { color: #fdba74 !important; }
+        .text-purple-700    { color: #c084fc !important; }
+        .text-purple-600    { color: #c084fc !important; }
+        .text-purple-500    { color: #d8b4fe !important; }
+
+        /* Status borders */
+        .border-red-100     { border-color: rgba(248,113,113,0.25) !important; }
+        .border-red-200     { border-color: rgba(239,68,68,0.3) !important; }
+        .border-red-300     { border-color: rgba(239,68,68,0.5) !important; }
+        .border-emerald-200 { border-color: rgba(52,211,153,0.3) !important; }
+        .border-indigo-200  { border-color: rgba(129,140,248,0.3) !important; }
+        .border-indigo-300  { border-color: rgba(129,140,248,0.4) !important; }
+        .border-indigo-400  { border-color: rgba(129,140,248,0.5) !important; }
+        .border-blue-200    { border-color: rgba(96,165,250,0.3) !important; }
+        .border-amber-200   { border-color: rgba(251,191,36,0.3) !important; }
+
+        /* Form inputs */
+        input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]),
+        select, textarea {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+        input::placeholder, textarea::placeholder { color: #64748b !important; }
+        select option { background-color: #1e293b; color: #f1f5f9; }
+
+        /* File input button */
+        .file\:bg-indigo-50::file-selector-button { background-color: rgba(49,46,129,0.4) !important; color: #a5b4fc !important; }
+
+        /* Hover states */
+        .hover\:bg-gray-50:hover   { background-color: #334155 !important; }
+        .hover\:bg-gray-100:hover  { background-color: #334155 !important; }
+        .hover\:bg-gray-200:hover  { background-color: #475569 !important; }
+        tr.hover\:bg-gray-50:hover { background-color: #1e293b !important; }
+
+        /* Hover states — pale badge/pill hovers (e.g. bg-indigo-50 ... hover:bg-indigo-100) */
+        .hover\:bg-indigo-50:hover  { background-color: rgba(49,46,129,0.3) !important; }
+        .hover\:bg-indigo-100:hover { background-color: rgba(49,46,129,0.45) !important; }
+        .hover\:bg-amber-100:hover  { background-color: rgba(120,53,15,0.45) !important; }
+        .hover\:bg-emerald-100:hover { background-color: rgba(5,78,22,0.45) !important; }
+        .hover\:bg-cyan-100:hover   { background-color: rgba(8,51,68,0.45) !important; }
+        .hover\:bg-orange-50:hover  { background-color: rgba(124,45,18,0.3) !important; }
+        .hover\:bg-orange-100:hover { background-color: rgba(124,45,18,0.45) !important; }
+        .hover\:bg-red-100:hover    { background-color: rgba(127,29,29,0.45) !important; }
+
+        .hover\:text-gray-700:hover  { color: #e2e8f0 !important; }
+        .hover\:text-blue-700:hover  { color: #93c5fd !important; }
+        .hover\:text-red-700:hover   { color: #f87171 !important; }
+        .hover\:text-red-300:hover   { color: #fca5a5 !important; }
+        .hover\:text-indigo-800:hover { color: #a5b4fc !important; }
+        .hover\:text-indigo-700:hover { color: #818cf8 !important; }
+        .hover\:text-indigo-500:hover { color: #a5b4fc !important; }
+
+        .hover\:border-indigo-200:hover { border-color: rgba(129,140,248,0.3) !important; }
+        .hover\:border-indigo-300:hover { border-color: rgba(129,140,248,0.4) !important; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="min-h-screen">
 
 <!-- Overlay -->
 <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
@@ -140,16 +285,16 @@
 <!-- Main Content -->
 <div class="lg:ml-64 min-h-screen">
     <!-- Top Bar -->
-    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
+    <header class="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/60">
         <div class="flex items-center justify-between px-4 sm:px-6 py-3">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-lg text-slate-400 hover:bg-slate-800">
                     <i class="fas fa-bars text-lg"></i>
                 </button>
-                <h2 class="text-lg font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
+                <h2 class="text-lg font-semibold text-slate-100">{% block page_title %}Dashboard{% endblock %}</h2>
             </div>
             <div class="flex items-center gap-3">
-                <span class="hidden sm:block text-sm text-gray-500">{{ request.user.email }}</span>
+                <span class="hidden sm:block text-sm text-slate-400">{{ request.user.email }}</span>
                 <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {{ request.user.email|first|upper }}
                 </div>
@@ -161,7 +306,11 @@
     {% if messages %}
     <div class="px-4 sm:px-6 pt-4 space-y-2">
         {% for message in messages %}
-        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm
+            {% if message.tags == 'success' %}bg-emerald-900/30 text-emerald-300 border border-emerald-700/40
+            {% elif message.tags == 'error' %}bg-red-900/30 text-red-300 border border-red-700/40
+            {% elif message.tags == 'warning' %}bg-amber-900/30 text-amber-300 border border-amber-700/40
+            {% else %}bg-blue-900/30 text-blue-300 border border-blue-700/40{% endif %}">
             <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
             <span>{{ message }}</span>
             <button onclick="this.parentElement.remove()" class="ml-auto text-current opacity-50 hover:opacity-100"><i class="fas fa-times"></i></button>
