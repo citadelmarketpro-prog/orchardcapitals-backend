@@ -331,6 +331,114 @@ def send_welcome_email(user):
 
 
 # ---------------------------------------------------------------------------
+# 1b. KYC / Identity Verification Approved
+# ---------------------------------------------------------------------------
+
+def send_kyc_approved_email(user):
+    """
+    Send the "Verification Successfully Completed" email once a user's
+    identity verification is approved from the admin panel.
+
+    Args:
+        user: CustomUser instance
+
+    Returns:
+        bool: Success status
+    """
+    subject = "Verification Successfully Completed"
+    name = user.first_name or "Trader"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{subject}</title>
+      {_base_styles()}
+    </head>
+    <body>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG}; padding:32px 0;">
+      <tr><td align="center">
+        <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG};">
+
+          {_header("Verification Successfully Completed", "Your identity verification has been approved.", "Your account is now fully verified.")}
+
+          <!-- Body -->
+          <tr>
+            <td align="center" style="background-color:{_BODY_BG}; padding:0;">
+              <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="content-padding" style="padding:32px 40px;">
+
+                    <!-- Greeting card -->
+                    {_card(f'''
+                    <p style="margin:0 0 10px; font-size:22px; font-weight:700; color:{_TEXT_PRIMARY};">Hello, {name}.</p>
+                    <p style="margin:0; font-size:15px; color:{_TEXT_MUTED}; line-height:1.7;">
+                      Your identity verification has been approved.
+                    </p>
+                    ''', padding="28px 32px")}
+
+                    <!-- Verification status strip -->
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:{_ACCENT_LIGHT}; border:1px solid #fbd0b8; border-radius:8px; margin-bottom:16px;">
+                      <tr>
+                        <td style="padding:18px 24px;">
+                          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                              <td>
+                                <p style="margin:0 0 2px; font-size:11px; font-weight:600; color:{_BRAND_ORANGE}; letter-spacing:1px; text-transform:uppercase;">Account Verification</p>
+                                <p style="margin:0; font-size:14px; font-weight:600; color:{_TEXT_PRIMARY};">Identity Verified</p>
+                              </td>
+                              <td align="right">
+                                <span style="background-color:{_BRAND_ORANGE}; color:#fff; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:0.5px;">&#10003; VERIFIED</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <p style="margin:0 0 8px; font-size:15px; color:{_TEXT_MUTED}; line-height:1.7;">
+                      You can now fund your account and access the available traders and
+                      mirror-trading strategies from your client dashboard.
+                    </p>
+
+                    <!-- CTA -->
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:16px;">
+                      <tr>
+                        <td align="center" style="padding:8px 0 28px;">
+                          <a href="{settings.FRONTEND_URL}/dashboard" style="display:inline-block; background-color:{_BRAND_ORANGE}; color:#ffffff; font-size:15px; font-weight:600; text-decoration:none; padding:14px 40px; border-radius:6px; letter-spacing:0.3px;">
+                            Access Client Dashboard
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <p style="margin:0; font-size:14px; color:{_TEXT_MUTED}; line-height:1.7;">
+                      Thank you,<br>
+                      <strong style="color:{_TEXT_PRIMARY};">Orchards Capital</strong><br>
+                      Account Verification Department
+                    </p>
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          {_footer()}
+
+        </table>
+      </td></tr>
+    </table>
+    </body>
+    </html>
+    """
+
+    return send_email(user.email, subject, html_content)
+
+
+# ---------------------------------------------------------------------------
 # 2. Email Verification Code
 # ---------------------------------------------------------------------------
 

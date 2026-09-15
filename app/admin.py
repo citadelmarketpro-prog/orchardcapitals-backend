@@ -199,6 +199,18 @@ class CustomUserAdmin(UserAdmin):
     
     readonly_fields = ('date_joined', 'last_login', 'account_id')
 
+    def save_model(self, request, obj, form, change):
+        # Send the "Verification Successfully Completed" email whenever an
+        # admin flips is_verified on from this built-in admin form too —
+        # same as the custom dashboard's Approve KYC / verify actions.
+        was_verified = False
+        if change:
+            was_verified = CustomUser.objects.filter(pk=obj.pk, is_verified=True).exists()
+        super().save_model(request, obj, form, change)
+        if not was_verified and obj.is_verified:
+            from .email_service import send_kyc_approved_email
+            send_kyc_approved_email(obj)
+
 
 
 @admin.register(Portfolio)

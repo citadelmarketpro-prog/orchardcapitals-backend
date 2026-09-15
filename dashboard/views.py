@@ -21,6 +21,7 @@ from .forms import (
     AdminWalletForm, CardEditForm, AddUserDirectTradeForm, SignalForm, NotificationForm,
 )
 from .decorators import admin_required
+from app.email_service import send_kyc_approved_email
 
 
 # ---------------------------------------------------------------------------
@@ -193,8 +194,11 @@ def user_detail(request, user_id):
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'verify':
+            was_verified = user.is_verified
             user.is_verified = True
             user.save()
+            if not was_verified:
+                send_kyc_approved_email(user)
             messages.success(request, f'{user.email} has been verified.')
         elif action == 'unverify':
             user.is_verified = False
@@ -351,6 +355,7 @@ def kyc_detail(request, user_id):
                 Notification.objects.create(user=user, type='system', title='KYC Approved',
                     message='Your KYC verification has been approved!',
                     full_details='Your account is now fully verified. You can access all features.')
+                send_kyc_approved_email(user)
                 messages.success(request, f'KYC approved for {user.email}')
             else:
                 user.is_verified = False
