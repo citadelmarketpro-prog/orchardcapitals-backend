@@ -682,13 +682,13 @@ def send_password_reset_email(user, token, uid):
                 <tr>
                   <td class="content-padding" style="padding:32px 40px;">
 
-                    {_card(f"""
+                    {_card(f'''
                     <p style="margin:0 0 6px; font-size:16px; font-weight:600; color:{_TEXT_PRIMARY};">Hello, {name}.</p>
                     <p style="margin:0; font-size:14px; color:{_TEXT_MUTED}; line-height:1.7;">
                       We received a password reset request for the Orchard Capitals account associated with <strong style="color:{_TEXT_PRIMARY};">{user.email}</strong>.
                       Click the button below to choose a new password. This link is valid for <strong>1 hour</strong>.
                     </p>
-                    """, padding="28px 32px")}
+                    ''', padding="28px 32px")}
 
                     <!-- CTA -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:{_HEADER_BG}; border-radius:10px; margin-bottom:16px;">
@@ -705,10 +705,10 @@ def send_password_reset_email(user, token, uid):
                     </table>
 
                     <!-- Fallback link -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Button not working? Copy this link into your browser:")}
                     <p style="margin:0; font-size:12px; color:{_TEXT_MUTED}; word-break:break-all; background-color:{_BODY_BG}; padding:12px 14px; border-radius:6px; border:1px solid {_BORDER}; font-family:'Courier New',monospace; line-height:1.6;">{reset_link}</p>
-                    """, padding="24px 28px")}
+                    ''', padding="24px 28px")}
 
                     <!-- Warning -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fffbeb; border:1px solid #fcd34d; border-radius:8px; margin-bottom:24px;">
@@ -799,7 +799,7 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
                     </table>
 
                     <!-- Deposit details -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Deposit Details")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Currency", currency)}
@@ -807,10 +807,10 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
                       {_info_row("Initiated At", timestamp)}
                       {_info_row("Receipt", '<span style="color:#9ca3af;">Pending upload</span>')}
                     </table>
-                    """, padding="24px 28px", border_left=_BRAND_ORANGE)}
+                    ''', padding="24px 28px", border_left=_BRAND_ORANGE)}
 
                     <!-- User details -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Account Holder", "#3b82f6")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Full Name", f"{user.first_name} {user.last_name}")}
@@ -819,7 +819,7 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
                       {_info_row("Current Balance", f"${user.balance}")}
                       {_info_row("KYC Status", kyc_status)}
                     </table>
-                    """, padding="24px 28px", border_left="#3b82f6")}
+                    ''', padding="24px 28px", border_left="#3b82f6")}
 
                   </td>
                 </tr>
@@ -890,7 +890,7 @@ def send_admin_deposit_notification(user, transaction):
                     </table>
 
                     <!-- Transaction details -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Transaction Details")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Reference ID", transaction.reference)}
@@ -899,10 +899,10 @@ def send_admin_deposit_notification(user, transaction):
                       {_info_row("Units", f"{transaction.unit} {transaction.currency}")}
                       {_info_row("Receipt", receipt_html)}
                     </table>
-                    """, padding="24px 28px", border_left=_BRAND_ORANGE)}
+                    ''', padding="24px 28px", border_left=_BRAND_ORANGE)}
 
                     <!-- User details -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Account Holder", "#3b82f6")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Full Name", f"{user.first_name} {user.last_name}")}
@@ -911,7 +911,7 @@ def send_admin_deposit_notification(user, transaction):
                       {_info_row("Current Balance", f"${user.balance}")}
                       {_info_row("KYC Status", kyc_status)}
                     </table>
-                    """, padding="24px 28px", border_left="#3b82f6")}
+                    ''', padding="24px 28px", border_left="#3b82f6")}
 
                     <!-- Action prompt -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fffbeb; border:1px solid #fcd34d; border-radius:8px; margin-bottom:24px;">
@@ -1005,17 +1005,17 @@ def send_admin_withdrawal_notification(user, transaction, method_type=None, addr
                     </table>
 
                     <!-- Transaction details -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Transaction Details", "#ef4444")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Reference ID", transaction.reference)}
                       {_info_row("Date &amp; Time", transaction.created_at.strftime('%B %d, %Y at %I:%M %p UTC'))}
                       {_info_row("Amount", f"${transaction.amount}", "#ef4444")}
                     </table>
-                    """, padding="24px 28px", border_left="#ef4444")}
+                    ''', padding="24px 28px", border_left="#ef4444")}
 
                     <!-- User details -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Account Holder", "#3b82f6")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Full Name", f"{user.first_name} {user.last_name}")}
@@ -1024,17 +1024,17 @@ def send_admin_withdrawal_notification(user, transaction, method_type=None, addr
                       {_info_row("Remaining Balance", f"${user.balance}")}
                       {_info_row("KYC Status", kyc_status)}
                     </table>
-                    """, padding="24px 28px", border_left="#3b82f6")}
+                    ''', padding="24px 28px", border_left="#3b82f6")}
 
                     <!-- Payment destination -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Payment Destination", _BRAND_ORANGE)}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Method", payment_method_info)}
                       {_info_row("Address / Account", f'<span style="font-family:\'Courier New\',monospace; font-size:12px;">{payment_address}</span>')}
                       {bank_row}
                     </table>
-                    """, padding="24px 28px", border_left=_BRAND_ORANGE)}
+                    ''', padding="24px 28px", border_left=_BRAND_ORANGE)}
 
                   </td>
                 </tr>
