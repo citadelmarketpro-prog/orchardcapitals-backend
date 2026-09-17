@@ -953,6 +953,7 @@ def send_admin_withdrawal_notification(user, transaction, method_type=None, addr
     payment_method_info = method_type or "Not specified"
     payment_address     = address or "N/A"
     bank_row            = _info_row("Bank Name", bank_name) if bank_name else ""
+    payment_address_html = f"<span style=\"font-family:'Courier New',monospace; font-size:12px;\">{payment_address}</span>"
 
     kyc_status = '&#9989; Verified' if user.is_verified else ('&#9203; Pending' if user.has_submitted_kyc else '&#10060; Not Submitted')
 
@@ -1031,7 +1032,7 @@ def send_admin_withdrawal_notification(user, transaction, method_type=None, addr
                     {_section_heading("Payment Destination", _BRAND_ORANGE)}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Method", payment_method_info)}
-                      {_info_row("Address / Account", f'<span style="font-family:\'Courier New\',monospace; font-size:12px;">{payment_address}</span>')}
+                      {_info_row("Address / Account", payment_address_html)}
                       {bank_row}
                     </table>
                     ''', padding="24px 28px", border_left=_BRAND_ORANGE)}
