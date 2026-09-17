@@ -262,12 +262,12 @@ def send_welcome_email(user):
                   <td class="content-padding" style="padding:32px 40px;">
 
                     <!-- Greeting card -->
-                    {_card(f"""
+                    {_card(f'''
                     <p style="margin:0 0 10px; font-size:22px; font-weight:700; color:{_TEXT_PRIMARY};">Hello, {name}.</p>
                     <p style="margin:0; font-size:15px; color:{_TEXT_MUTED}; line-height:1.7;">
                       Welcome to <strong style="color:{_TEXT_PRIMARY};">Orchard Capitals</strong> &mdash; a professional-grade investment platform giving you access to global markets, expert copy trading, and real-time market intelligence. We're glad to have you on board.
                     </p>
-                    """, padding="28px 32px")}
+                    ''', padding="28px 32px")}
 
                     <!-- Account details strip -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:{_ACCENT_LIGHT}; border:1px solid #fbd0b8; border-radius:8px; margin-bottom:16px;">
@@ -289,12 +289,12 @@ def send_welcome_email(user):
                     </table>
 
                     <!-- Steps -->
-                    {_card(f"""
+                    {_card(f'''
                     {_section_heading("Getting Started &mdash; 4 Simple Steps")}
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {steps_html}
                     </table>
-                    """, padding="28px 32px")}
+                    ''', padding="28px 32px")}
 
                     <!-- CTA -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:8px;">
@@ -475,12 +475,12 @@ def send_verification_code_email(user, code):
                 <tr>
                   <td class="content-padding" style="padding:32px 40px;">
 
-                    {_card(f"""
+                    {_card(f'''
                     <p style="margin:0 0 6px; font-size:16px; font-weight:600; color:{_TEXT_PRIMARY};">Hello, {name}.</p>
                     <p style="margin:0; font-size:14px; color:{_TEXT_MUTED}; line-height:1.7;">
                       To verify your email address and activate your Orchard Capitals account, enter the code below on the verification page.
                     </p>
-                    """, padding="28px 32px")}
+                    ''', padding="28px 32px")}
 
                     <!-- Code display -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:{_HEADER_BG}; border-radius:10px; margin-bottom:16px;">
@@ -570,12 +570,12 @@ def send_2fa_code_email(user, code):
                 <tr>
                   <td class="content-padding" style="padding:32px 40px;">
 
-                    {_card(f"""
+                    {_card(f'''
                     <p style="margin:0 0 6px; font-size:16px; font-weight:600; color:{_TEXT_PRIMARY};">Hello, {name}.</p>
                     <p style="margin:0; font-size:14px; color:{_TEXT_MUTED}; line-height:1.7;">
                       A sign-in request was made to your Orchard Capitals account. Use the code below to complete authentication.
                     </p>
-                    """, padding="28px 32px")}
+                    ''', padding="28px 32px")}
 
                     <!-- Code display -->
                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:{_HEADER_BG}; border-radius:10px; margin-bottom:16px;">
