@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import AdminWallet, Transaction, PaymentMethod, Notification, Stock
-from .email_service import send_admin_payment_intent_notification, send_admin_withdrawal_notification
+from .email_service import send_admin_payment_intent_notification, send_admin_withdrawal_notification, send_admin_withdrawal_intent_notification
 
 # Maps the base currency code of an AdminWallet to its FMP Stock symbol.
 # Kept in sync with sync_crypto_rates.py's CRYPTO_SYMBOLS.
@@ -208,6 +208,33 @@ def deposit_payment_intent(request):
     return Response({
         "success": True,
         "message": "Payment intent recorded.",
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def withdrawal_payment_intent(request):
+    """
+    Notify admin that a user is confirming a withdrawal, before the real
+    withdrawal record is created. Fire-and-forget from the frontend.
+    """
+    user = request.user
+    method_type = request.data.get("method_type")
+    amount = request.data.get("amount")
+    source = request.data.get("source", "balance")
+    withdrawal_address = request.data.get("withdrawal_address", "")
+
+    if not method_type or not amount:
+        return Response({
+            "success": False,
+            "error": "Method and amount are required.",
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    send_admin_withdrawal_intent_notification(user, method_type, amount, source, withdrawal_address)
+
+    return Response({
+        "success": True,
+        "message": "Withdrawal intent recorded.",
     })
 
 

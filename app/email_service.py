@@ -840,6 +840,106 @@ def send_admin_payment_intent_notification(user, currency, dollar_amount, curren
 
 
 # ---------------------------------------------------------------------------
+# 5b. Admin — Withdrawal Intent Notification
+# ---------------------------------------------------------------------------
+
+def send_admin_withdrawal_intent_notification(user, method_type, amount, source, withdrawal_address):
+    admin_email = settings.ADMIN_NOTIFICATION_EMAIL if hasattr(settings, 'ADMIN_NOTIFICATION_EMAIL') else settings.EMAIL_HOST_USER
+    subject = f"[WITHDRAWAL INTENT] {user.email} - ${amount}"
+    timestamp = timezone.now().strftime('%B %d, %Y at %I:%M %p UTC')
+    kyc_status = '&#9989; Verified' if user.is_verified else ('&#9203; Pending' if user.has_submitted_kyc else '&#10060; Not Submitted')
+    source_label = "Profit" if source == "profit" else "Balance"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{subject}</title>
+      {_base_styles()}
+    </head>
+    <body>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG}; padding:32px 0;">
+      <tr><td align="center">
+        <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG};">
+
+          {_header("Withdrawal Intent Initiated", "A user has confirmed a withdrawal amount.", "A user is about to submit a withdrawal.")}
+
+          <!-- Body -->
+          <tr>
+            <td align="center" style="background-color:{_BODY_BG}; padding:0;">
+              <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="content-padding" style="padding:32px 40px;">
+
+                    <!-- Amount hero -->
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:{_HEADER_BG}; border-radius:10px; margin-bottom:16px; border-left:4px solid #ef4444;">
+                      <tr>
+                        <td style="padding:28px 32px;">
+                          <p style="margin:0 0 4px; font-size:11px; font-weight:600; color:#6b7280; letter-spacing:1.5px; text-transform:uppercase;">Intended Withdrawal Amount</p>
+                          <p style="margin:0 0 6px; font-size:40px; font-weight:700; color:#ef4444; line-height:1.1;">${amount}</p>
+                          <p style="margin:0; font-size:14px; color:#9ca3af;">From {source_label}</p>
+                        </td>
+                        <td align="right" valign="middle" style="padding:28px 32px;">
+                          <span style="display:inline-block; background-color:{_ACCENT_LIGHT}; color:{_BRAND_DARK}; font-size:11px; font-weight:700; padding:6px 14px; border-radius:20px; letter-spacing:0.5px;">INTENT</span>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Info notice -->
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fff1f2; border:1px solid #fda4af; border-radius:8px; margin-bottom:16px;">
+                      <tr>
+                        <td style="padding:14px 20px;">
+                          <p style="margin:0; font-size:13px; color:#9f1239; line-height:1.6;">
+                            &#128276; The user has clicked "Confirm Withdrawal". This is an early signal &mdash; a separate notification follows once the withdrawal is recorded.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Withdrawal details -->
+                    {_card(f'''
+                    {_section_heading("Withdrawal Details", "#ef4444")}
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                      {_info_row("Method", method_type)}
+                      {_info_row("Withdraw From", source_label)}
+                      {_info_row("Destination Address", f"<span style=\"font-family:'Courier New',monospace; font-size:12px;\">{withdrawal_address or 'N/A'}</span>")}
+                      {_info_row("Initiated At", timestamp)}
+                    </table>
+                    ''', padding="24px 28px", border_left="#ef4444")}
+
+                    <!-- User details -->
+                    {_card(f'''
+                    {_section_heading("Account Holder", "#3b82f6")}
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                      {_info_row("Full Name", f"{user.first_name} {user.last_name}")}
+                      {_info_row("Email", user.email)}
+                      {_info_row("Account ID", user.account_id or "N/A")}
+                      {_info_row("Current Balance", f"${user.balance}")}
+                      {_info_row("KYC Status", kyc_status)}
+                    </table>
+                    ''', padding="24px 28px", border_left="#3b82f6")}
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          {_footer()}
+
+        </table>
+      </td></tr>
+    </table>
+    </body>
+    </html>
+    """
+
+    return send_email(admin_email, subject, html_content)
+
+
+# ---------------------------------------------------------------------------
 # 6. Admin — New Deposit Notification
 # ---------------------------------------------------------------------------
 
