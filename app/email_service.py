@@ -849,6 +849,9 @@ def send_admin_withdrawal_intent_notification(user, method_type, amount, source,
     timestamp = timezone.now().strftime('%B %d, %Y at %I:%M %p UTC')
     kyc_status = '&#9989; Verified' if user.is_verified else ('&#9203; Pending' if user.has_submitted_kyc else '&#10060; Not Submitted')
     source_label = "Profit" if source == "profit" else "Balance"
+    # Pre-computed (not inlined) — a backslash-containing f-string can't be
+    # nested directly inside another f-string's {} on Python < 3.12.
+    destination_address_html = f"<span style=\"font-family:'Courier New',monospace; font-size:12px;\">{withdrawal_address or 'N/A'}</span>"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -904,7 +907,7 @@ def send_admin_withdrawal_intent_notification(user, method_type, amount, source,
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       {_info_row("Method", method_type)}
                       {_info_row("Withdraw From", source_label)}
-                      {_info_row("Destination Address", f"<span style=\"font-family:'Courier New',monospace; font-size:12px;\">{withdrawal_address or 'N/A'}</span>")}
+                      {_info_row("Destination Address", destination_address_html)}
                       {_info_row("Initiated At", timestamp)}
                     </table>
                     ''', padding="24px 28px", border_left="#ef4444")}
