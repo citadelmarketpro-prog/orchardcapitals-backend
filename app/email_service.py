@@ -1156,3 +1156,138 @@ def send_admin_withdrawal_notification(user, transaction, method_type=None, addr
     """
 
     return send_email(admin_email, subject, html_content)
+
+
+# ---------------------------------------------------------------------------
+# Custom / bulk client email — composed by an admin in the dashboard
+# ---------------------------------------------------------------------------
+
+def _build_custom_email_html(
+    name: str,
+    message: str,
+    subject: str,
+    heading: str = "",
+    social_links: dict | None = None,
+    cta_text: str = "",
+    cta_url: str = "",
+) -> str:
+    """
+    Build the full HTML document for a custom/bulk admin email, shared by
+    `send_custom_email` (real send) and `render_custom_email_preview`
+    (admin preview, not sent).
+
+    - `message` is plain text; blank lines start a new paragraph, single
+      newlines become <br>. It is HTML-escaped, so admins can't break markup.
+    - `heading` is optional — omitted entirely if blank.
+    - `social_links` is an optional dict like {"facebook": "https://...", ...}.
+      Only platforms with a non-empty URL are shown; omitted entirely if
+      the dict is empty/None.
+    - `cta_text` + `cta_url` are optional — both must be set to show a button.
+    """
+    from django.template.defaultfilters import linebreaks
+    from django.utils.html import escape
+
+    message_html = linebreaks(message.strip(), autoescape=True)
+    heading_html = f'<p style="margin:0 0 14px; font-size:20px; font-weight:700; color:{_TEXT_PRIMARY};">{escape(heading)}</p>' if heading else ""
+
+    cta_html = ""
+    if cta_text and cta_url:
+        cta_html = f"""
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:8px;">
+          <tr>
+            <td align="center" style="padding:8px 0 4px;">
+              <a href="{escape(cta_url)}" style="display:inline-block; background-color:{_BRAND_ORANGE}; color:#ffffff; font-size:15px; font-weight:600; text-decoration:none; padding:14px 40px; border-radius:6px; letter-spacing:0.3px;">
+                {escape(cta_text)}
+              </a>
+            </td>
+          </tr>
+        </table>
+        """
+
+    social_html = ""
+    if social_links:
+        links_row = "".join(
+            f'<td style="padding:0 10px;"><a href="{escape(url)}" style="font-size:12px; color:{_BRAND_ORANGE}; text-decoration:none; font-weight:600; text-transform:capitalize;">{escape(platform)}</a></td>'
+            for platform, url in social_links.items() if url
+        )
+        if links_row:
+            social_html = f"""
+            <table cellpadding="0" cellspacing="0" border="0" style="margin:24px auto 0;">
+              <tr>{links_row}</tr>
+            </table>
+            """
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{subject}</title>
+      {_base_styles()}
+    </head>
+    <body>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG}; padding:32px 0;">
+      <tr><td align="center">
+        <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0" style="background-color:{_BODY_BG};">
+
+          {_header(subject)}
+
+          <tr>
+            <td align="center" style="background-color:{_BODY_BG}; padding:0;">
+              <table width="600" class="email-container" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="content-padding" style="padding:32px 40px;">
+
+                    {_card(f'''
+                    <p style="margin:0 0 10px; font-size:18px; font-weight:700; color:{_TEXT_PRIMARY};">Hello, {escape(name)}.</p>
+                    {heading_html}
+                    <div style="font-size:15px; color:{_TEXT_MUTED}; line-height:1.7;">{message_html}</div>
+                    {cta_html}
+                    {social_html}
+                    ''', padding="28px 32px")}
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          {_footer()}
+
+        </table>
+      </td></tr>
+    </table>
+    </body>
+    </html>
+    """
+    return html_content
+
+
+def send_custom_email(
+    user,
+    subject: str,
+    message: str,
+    heading: str = "",
+    social_links: dict | None = None,
+    cta_text: str = "",
+    cta_url: str = "",
+) -> bool:
+    """Send an admin-composed email to a single user using the branded template."""
+    name = user.first_name or getattr(user, "username", "") or "Investor"
+    html = _build_custom_email_html(name, message, subject, heading, social_links, cta_text, cta_url)
+    return send_email(user.email, subject, html)
+
+
+def render_custom_email_preview(
+    message: str,
+    subject: str = "Preview",
+    heading: str = "",
+    social_links: dict | None = None,
+    cta_text: str = "",
+    cta_url: str = "",
+    preview_name: str = "Investor",
+) -> str:
+    """Render the exact HTML a recipient would receive, without sending — used for
+    the admin panel's campaign detail/preview page."""
+    return _build_custom_email_html(preview_name, message, subject, heading, social_links, cta_text, cta_url)

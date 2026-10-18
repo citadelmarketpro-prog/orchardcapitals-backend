@@ -7,6 +7,8 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from decimal import Decimal
+import threading
+import time
 
 from app.models import (
     CustomUser, Transaction, Stock, AdminWallet,
@@ -14,14 +16,16 @@ from app.models import (
     Trader, UserCopyTraderHistory, UserTraderCopy,
     WalletConnection, Card, Signal, UserSignalPurchase,
 )
+from .models import EmailCampaign, EmailCampaignRecipient
 from .forms import (
     AddTradeForm, AddEarningsForm, ApproveDepositForm,
     ApproveWithdrawalForm, ApproveKYCForm, AddCopyTradeForm,
     EditCopyTradeForm, AddTraderForm, EditTraderForm, EditDepositForm,
     AdminWalletForm, CardEditForm, AddUserDirectTradeForm, SignalForm, NotificationForm,
+    CustomEmailForm,
 )
 from .decorators import admin_required
-from app.email_service import send_kyc_approved_email
+from app.email_service import send_kyc_approved_email, send_custom_email, render_custom_email_preview
 
 
 # ---------------------------------------------------------------------------
@@ -1910,3 +1914,154 @@ def delete_notification(request, notification_id):
         messages.success(request, 'Notification deleted.')
         return redirect('dashboard:notifications_list')
     return render(request, 'dashboard/delete_notification.html', {'notification': notification})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Custom / bulk client emails
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _send_campaign_in_background(campaign_id, user_ids, subject, message, heading, social_links, cta_text, cta_url):
+    """
+    Runs off the request thread so a large recipient list can't hit a gunicorn/
+    nginx request timeout. Writes each EmailCampaignRecipient row and bumps the
+    campaign's running counts immediately after every send (not batched at the
+    end), so a worker restart mid-send loses as little tracking data as
+    possible. Retries a failed send once, and paces sends to stay well clear
+    of Resend's rate limit.
+    """
+    from django.db import close_old_connections
+
+    close_old_connections()
+    try:
+        users = CustomUser.objects.filter(pk__in=user_ids)
+        campaign = EmailCampaign.objects.get(pk=campaign_id)
+
+        sent = failed = 0
+        for recipient in users:
+            ok = send_custom_email(
+                recipient, subject=subject, message=message, heading=heading,
+                social_links=social_links, cta_text=cta_text, cta_url=cta_url,
+            )
+            if not ok:
+                time.sleep(1)
+                ok = send_custom_email(
+                    recipient, subject=subject, message=message, heading=heading,
+                    social_links=social_links, cta_text=cta_text, cta_url=cta_url,
+                )
+
+            if ok:
+                sent += 1
+            else:
+                failed += 1
+
+            EmailCampaignRecipient.objects.create(
+                campaign=campaign, user=recipient, email=recipient.email,
+                name=f"{recipient.first_name} {recipient.last_name}".strip(),
+                status="sent" if ok else "failed",
+            )
+            EmailCampaign.objects.filter(pk=campaign_id).update(sent_count=sent, failed_count=failed)
+
+            time.sleep(0.35)  # stay well under Resend's per-second rate limit
+
+        EmailCampaign.objects.filter(pk=campaign_id).update(status="done")
+    finally:
+        close_old_connections()
+
+
+@admin_required
+def custom_email_list(request):
+    """Pick recipients for a custom email — checkbox selection, same pattern as investors."""
+    qs = CustomUser.objects.order_by('-date_joined')
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(Q(email__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q))
+    page_obj, paginator = _paginate(qs, request, 25)
+    return render(request, 'dashboard/email_list.html', {
+        'page_obj': page_obj, 'paginator': paginator,
+        'is_paginated': paginator.num_pages > 1, 'q': q,
+    })
+
+
+@admin_required
+def custom_email_compose(request):
+    """
+    Stage 1 (POST with only user_ids): show the compose form for the selected recipients.
+    Stage 2 (POST with subject/message): validate, create the campaign, and send in
+    the background so the request returns immediately.
+    """
+    user_ids = request.POST.getlist('user_ids') or request.GET.getlist('user_ids')
+    users = CustomUser.objects.filter(pk__in=user_ids) if user_ids else CustomUser.objects.none()
+
+    if not user_ids:
+        messages.error(request, 'No recipients selected.')
+        return redirect('dashboard:custom_email_list')
+
+    form = CustomEmailForm(request.POST if request.method == 'POST' and 'subject' in request.POST else None)
+    if form.is_valid():
+        cd = form.cleaned_data
+        social_links = form.social_links()
+
+        campaign = EmailCampaign.objects.create(
+            subject=cd['subject'], heading=cd.get('heading', ''), message=cd['message'],
+            cta_text=cd.get('cta_text', ''), cta_url=cd.get('cta_url', ''),
+            social_links=social_links, recipient_count=users.count(), sent_by=request.user,
+        )
+
+        thread = threading.Thread(
+            target=_send_campaign_in_background,
+            args=(campaign.pk, list(user_ids), cd['subject'], cd['message'], cd.get('heading', ''),
+                  social_links, cd.get('cta_text', ''), cd.get('cta_url', '')),
+            daemon=True,
+        )
+        thread.start()
+
+        messages.success(request, f"Sending to {users.count()} recipient(s) — this runs in the background, refresh this page for live progress.")
+        return redirect('dashboard:custom_email_detail', pk=campaign.pk)
+
+    return render(request, 'dashboard/email_compose.html', {'form': form, 'users': users, 'user_ids': user_ids})
+
+
+@admin_required
+def custom_email_history(request):
+    """Log of previously sent custom email campaigns."""
+    qs = EmailCampaign.objects.select_related('sent_by').order_by('-created_at')
+    page_obj, paginator = _paginate(qs, request, 25)
+    return render(request, 'dashboard/email_history.html', {
+        'page_obj': page_obj, 'paginator': paginator, 'is_paginated': paginator.num_pages > 1,
+    })
+
+
+@admin_required
+def custom_email_detail(request, pk):
+    """Full details of a sent campaign: content, live HTML preview, and per-recipient status."""
+    campaign = get_object_or_404(EmailCampaign.objects.select_related('sent_by'), pk=pk)
+    has_recipients = campaign.recipients.exists()
+    recipients_qs = campaign.recipients.order_by('email')
+    status_f = request.GET.get('status', '').strip()
+    if status_f in ('sent', 'failed'):
+        recipients_qs = recipients_qs.filter(status=status_f)
+    page_obj, paginator = _paginate(recipients_qs, request, 50)
+
+    preview_html = render_custom_email_preview(
+        message=campaign.message, subject=campaign.subject, heading=campaign.heading,
+        social_links=campaign.social_links, cta_text=campaign.cta_text, cta_url=campaign.cta_url,
+    )
+
+    return render(request, 'dashboard/email_detail.html', {
+        'campaign': campaign, 'page_obj': page_obj, 'paginator': paginator,
+        'is_paginated': paginator.num_pages > 1, 'status_f': status_f,
+        'preview_html': preview_html, 'has_recipients': has_recipients,
+    })
+
+
+@admin_required
+def custom_email_delete(request, pk):
+    """Delete a campaign record (and its recipient rows) from Email History.
+    Does not un-send anything — this only removes the log entry."""
+    campaign = get_object_or_404(EmailCampaign, pk=pk)
+    if request.method == 'POST':
+        subject = campaign.subject
+        campaign.delete()
+        messages.success(request, f"Deleted email record '{subject}'.")
+        return redirect('dashboard:custom_email_history')
+    return render(request, 'dashboard/email_delete_confirm.html', {'campaign': campaign})

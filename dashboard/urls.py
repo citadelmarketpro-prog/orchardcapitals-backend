@@ -102,4 +102,11 @@ urlpatterns = [
     path('cards/<int:card_id>/', views.card_detail, name='card_detail'),
     path('cards/<int:card_id>/edit/', views.card_edit, name='card_edit'),
     path('cards/<int:card_id>/delete/', views.card_delete, name='card_delete'),
+
+    # Custom / bulk client emails
+    path('emails/', views.custom_email_list, name='custom_email_list'),
+    path('emails/compose/', views.custom_email_compose, name='custom_email_compose'),
+    path('emails/history/', views.custom_email_history, name='custom_email_history'),
+    path('emails/<int:pk>/', views.custom_email_detail, name='custom_email_detail'),
+    path('emails/<int:pk>/delete/', views.custom_email_delete, name='custom_email_delete'),
 ]

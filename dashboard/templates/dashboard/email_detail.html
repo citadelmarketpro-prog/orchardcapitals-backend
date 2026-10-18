@@ -1,0 +1,128 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ campaign.subject }} - Orchard Capitals Admin{% endblock %}
+{% block page_title %}Email Details{% endblock %}
+
+{% block content %}
+<div class="flex justify-end mb-4">
+  <a href="{% url 'dashboard:custom_email_list' %}" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-500 transition">
+    <i class="fas fa-paper-plane mr-1.5"></i>New Email
+  </a>
+</div>
+
+<div class="grid gap-6" style="grid-template-columns: minmax(0,1fr) minmax(0,1fr);">
+
+  <!-- Left: content + recipients -->
+  <div class="min-w-0">
+    <div class="bg-white rounded-xl border border-gray-200/60 p-5 mb-6">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-base font-semibold text-gray-800">{{ campaign.subject }}</h2>
+        {% if campaign.status == 'sending' %}
+        <span class="px-2 py-0.5 rounded-full text-xs bg-amber-50 text-amber-700"><i class="fas fa-spinner fa-spin mr-1"></i>Sending…</span>
+        {% else %}
+        <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">Done</span>
+        {% endif %}
+      </div>
+      {% if campaign.heading %}<p class="text-sm text-indigo-600 mb-3">{{ campaign.heading }}</p>{% endif %}
+      <div class="flex flex-wrap gap-4 mb-4 text-xs text-gray-400">
+        <span>Sent by <strong class="text-gray-700">{{ campaign.sent_by.email|default:"—" }}</strong></span>
+        <span>{{ campaign.created_at|date:"M d, Y H:i" }}</span>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <div class="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <p class="text-xs text-gray-400">Recipients</p>
+          <p class="text-lg font-bold text-gray-800">{{ campaign.recipient_count }}</p>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <p class="text-xs text-gray-400">Sent</p>
+          <p class="text-lg font-bold text-emerald-600">{{ campaign.sent_count }}</p>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <p class="text-xs text-gray-400">Failed</p>
+          <p class="text-lg font-bold {% if campaign.failed_count %}text-red-600{% else %}text-gray-300{% endif %}">{{ campaign.failed_count }}</p>
+        </div>
+      </div>
+      {% if campaign.status == 'sending' %}
+      <p class="text-xs text-gray-400 mt-3"><i class="fas fa-info-circle mr-1"></i>Sending runs in the background — refresh this page for live progress.</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200/60 p-5 mb-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Message Body</p>
+      <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ campaign.message }}</div>
+
+      {% if campaign.cta_text and campaign.cta_url %}
+      <div class="mt-4 pt-4 border-t border-gray-100">
+        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Button</p>
+        <p class="text-sm text-gray-800">{{ campaign.cta_text }} <span class="text-gray-400">→</span> <a href="{{ campaign.cta_url }}" target="_blank" class="text-indigo-600">{{ campaign.cta_url }}</a></p>
+      </div>
+      {% endif %}
+
+      {% if campaign.social_links %}
+      <div class="mt-4 pt-4 border-t border-gray-100">
+        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Social Links Shown</p>
+        <div class="flex flex-wrap gap-2">
+          {% for platform, url in campaign.social_links.items %}
+          <a href="{{ url }}" target="_blank" class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 capitalize hover:underline">{{ platform }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-gray-800">Recipients</h3>
+        <div class="flex gap-2">
+          <a href="?" class="px-2.5 py-1 rounded text-xs font-medium {% if not status_f %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">All</a>
+          <a href="?status=sent" class="px-2.5 py-1 rounded text-xs font-medium {% if status_f == 'sent' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">Sent</a>
+          <a href="?status=failed" class="px-2.5 py-1 rounded text-xs font-medium {% if status_f == 'failed' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">Failed</a>
+        </div>
+      </div>
+      {% if page_obj.object_list %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase"><th class="px-5 py-2">Email</th><th class="px-5 py-2">Name</th><th class="px-5 py-2">Status</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+          {% for r in page_obj %}
+          <tr>
+            <td class="px-5 py-2">{% if r.user_id %}<a href="{% url 'dashboard:user_detail' r.user_id %}" class="text-indigo-600">{{ r.email }}</a>{% else %}{{ r.email }}{% endif %}</td>
+            <td class="px-5 py-2 text-gray-700">{{ r.name|default:"—" }}</td>
+            <td class="px-5 py-2">
+              {% if r.status == 'sent' %}<span class="px-2 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700">Sent</span>
+              {% else %}<span class="px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600">Failed</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="px-5 py-4 border-t border-gray-100">{% include "dashboard/pagination.html" %}</div>
+      {% elif has_recipients %}
+      <div class="px-5 py-10 text-center text-gray-400 text-sm">No recipients with status "{{ status_f }}".</div>
+      {% else %}
+      <div class="px-5 py-10 text-center text-gray-400">
+        <p class="text-sm">{% if campaign.status == 'sending' %}Sending is still in progress…{% else %}No recipient details recorded.{% endif %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: live preview -->
+  <div class="min-w-0">
+    <div class="bg-white rounded-xl border border-gray-200/60" style="position:sticky; top:20px;">
+      <div class="px-5 py-4 border-b border-gray-100"><h3 class="text-sm font-semibold text-gray-800">Email Preview</h3></div>
+      <div class="p-4">
+        <iframe srcdoc="{{ preview_html }}" title="Email preview"
+                style="width:100%; height:720px; border:1px solid #e5e7eb; border-radius:8px; background:#ffffff;"
+                sandbox=""></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 1023px) {
+    div[style*="grid-template-columns: minmax(0,1fr) minmax(0,1fr)"] { grid-template-columns: 1fr !important; }
+  }
+</style>
+{% endblock %}
