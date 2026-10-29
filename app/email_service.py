@@ -416,7 +416,7 @@ def send_kyc_approved_email(user):
 
                     <p style="margin:0; font-size:14px; color:{_TEXT_MUTED}; line-height:1.7;">
                       Thank you,<br>
-                      <strong style="color:{_TEXT_PRIMARY};">Orchards Capital</strong><br>
+                      <strong style="color:{_TEXT_PRIMARY};">Orchard Capitals</strong><br>
                       Account Verification Department
                     </p>
 
