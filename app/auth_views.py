@@ -863,12 +863,11 @@ def request_password_reset(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        # Don't reveal that user doesn't exist (security best practice)
+        # Intentional product choice: tell the user directly rather than
+        # hiding whether the account exists.
         return Response(
-            {
-                "message": "If an account exists with this email, you will receive a password reset link shortly."
-            },
-            status=status.HTTP_200_OK
+            {"error": "No account is registered with that email address."},
+            status=status.HTTP_404_NOT_FOUND
         )
 
     # Generate password reset token
@@ -886,9 +885,7 @@ def request_password_reset(request):
         )
 
     return Response(
-        {
-            "message": "If an account exists with this email, you will receive a password reset link shortly."
-        },
+        {"message": "Reset instructions have been sent to your email."},
         status=status.HTTP_200_OK
     )
 
